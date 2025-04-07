@@ -107,16 +107,16 @@ class Attachment:
 
 class MediaPayload:
     def __init__(self,
-        url: str,
         token: str,
+        url: "str | None" = None,
     ):
-        self.url: str = url
+        self.url: "str | None" = url
         self.token: str = token
 
 
     @staticmethod
     def from_json(data: dict) -> "MediaPayload | None":
-        return MediaPayload(data['url'], data['token'])
+        return MediaPayload(url=data.get('url'), token=data.get('token'))
 
 
 class StickerPayload:
@@ -149,17 +149,17 @@ class ContactPayload:
 
 class PhotoPayload(MediaPayload):
     def __init__(self,
-        url: str,
         token: str,
-        photo_id: int
+        url: "str | None" = None,
+        photo_id: "int | None" = None
     ):
         super().__init__(url, token)
-        self.photo_id: int = photo_id
+        self.photo_id: "int | None" = photo_id
 
     
     @staticmethod
     def from_json(data: dict) -> "PhotoPayload | None":
-        return PhotoPayload(data['url'], data['token'], data['photo_id'])
+        return PhotoPayload(url=data.get('url'), token=data.get('token'), photo_id=data.get('photo_id'))
 
 
 class PhotoAttachment(Attachment):
@@ -175,6 +175,13 @@ class PhotoAttachment(Attachment):
         return PhotoAttachment(
             PhotoPayload.from_json(data['payload'])
         )
+    
+    
+    def as_dict(self):
+        return {
+            'type': self.type,
+            'payload': {'token': self.payload.token}
+        }
 
 
 class VideoAttachment(Attachment):
@@ -202,6 +209,13 @@ class VideoAttachment(Attachment):
             data.get('height', None),
             data.get('duration', None),
         )
+    
+    
+    def as_dict(self):
+        return {
+            'type': self.type,
+            'payload': {'token': self.payload.token}
+        }
 
 
 class AudioAttachment(Attachment):
@@ -217,6 +231,13 @@ class AudioAttachment(Attachment):
         return AudioAttachment(
             MediaPayload.from_json(data['payload'])
         )
+    
+    
+    def as_dict(self):
+        return {
+            'type': self.type,
+            'payload': {'token': self.payload.token}
+        }
 
 
 class FileAttachment(Attachment):
@@ -238,6 +259,13 @@ class FileAttachment(Attachment):
             data['filename'],
             data['size']
         )
+    
+    
+    def as_dict(self):
+        return {
+            'type': self.type,
+            'payload': {'token': self.payload.token}
+        }
 
 
 class StickerAttachment(Attachment):
@@ -475,7 +503,7 @@ class CommandContext:
         format: "Literal['html', 'markdown', 'default'] | None" = 'default',
         notify: bool = True,
         disable_link_preview: bool = False,
-        # todo attachments
+        attachments: "list[Attachment] | None" = None
     ):
         '''
         Send a message to the chat that the user sent the command.
@@ -484,10 +512,11 @@ class CommandContext:
         :param format: Message format. Bot.default_format by default
         :param notify: Whether to notify users about the message. True by default.
         :param disable_link_preview: Whether to disable link preview. False by default
+        :param attachments: List of attachments. Optional
         '''
         await self.bot.send_message(
             text, chatId=self.message.recipient.chat_id,
-            format=format, notify=notify, disable_link_preview=disable_link_preview
+            format=format, notify=notify, disable_link_preview=disable_link_preview, attachments=attachments
         )
 
 
