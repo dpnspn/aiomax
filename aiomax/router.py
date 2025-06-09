@@ -41,7 +41,24 @@ t
             'message_removed': [],
             'message_callback': []
         }
-
+        
+    @staticmethod
+        def wrap_filter(filter_: "Callable | list[Callable] | str | None") -> Callable:
+            '''
+            Normalize filter to a single callable.
+            '''
+            if filter_ is None:
+                return lambda message: True
+    
+            if isinstance(filter_, str):
+                return lambda message: message.content == filter_
+    
+            if isinstance(filter_, list):
+                def combined_filter(message):
+                    return all(f(message) for f in filter_)
+                return combined_filter
+    
+            return filter_
 
     # routers
 
@@ -101,14 +118,12 @@ t
 
     # decorators
 
-    def on_message(self, filter: "Callable | str | None" = None):
+    def on_message(self, filter: "Callable | list[Callable] | str | None" = None):
         '''
         Decorator for receiving messages.
         '''
         def decorator(func):
-            new_filter = filter
-            if isinstance(filter, str):
-                new_filter = lambda message: message.content == filter
+            new_filter = self.wrap_filter(filter)
 
             self._handlers["message_created"].append(
                 Handler(call=func, deco_filter=new_filter, router_filters=self.filters['message_created'])
@@ -118,14 +133,12 @@ t
         return decorator
 
 
-    def on_message_edit(self, filter: "Callable | str | None" = None):
+    def on_message_edit(self, filter: "Callable | list[Callable] | str | None" = None):
         '''
         Decorator for editing messages.
         '''
         def decorator(func):
-            new_filter = filter
-            if isinstance(filter, str):
-                new_filter = lambda pl: pl.content == filter
+            new_filter = self.wrap_filter(filter)
 
             self._handlers["message_edited"].append(
                 Handler(call=func, deco_filter=new_filter, router_filters=self.filters['message_edited'])
@@ -135,14 +148,12 @@ t
         return decorator
 
 
-    def on_message_delete(self, filter: "Callable | str | None" = None):
+    def on_message_delete(self, filter: "Callable | list[Callable] | str | None" = None):
         '''
         Decorator for deleted messages.
         '''
         def decorator(func):
-            new_filter = filter
-            if isinstance(filter, str):
-                new_filter = lambda pl: pl.content == filter
+            new_filter = self.wrap_filter(filter)
 
             self._handlers["message_removed"].append(
                 Handler(call=func, deco_filter=new_filter, router_filters=self.filters['message_removed'])
@@ -222,14 +233,12 @@ t
         return decorator
 
 
-    def on_button_callback(self, filter: "Callable | None" = None):
+    def on_button_callback(self, "Callable | list[Callable] | str | None" = None):
         '''
         Decorator for receiving button presses.
         '''
         def decorator(func): 
-            new_filter = filter
-            if isinstance(filter, str):
-                new_filter = lambda pl: pl.content == filter
+            new_filter = self.wrap_filter(filter)
 
             self._handlers["message_callback"].append(
                 Handler(call=func, deco_filter=new_filter, router_filters=self.filters['message_callback'])
