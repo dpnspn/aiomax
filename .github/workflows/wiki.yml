@@ -1,0 +1,46 @@
+name: Publish wiki
+
+on:
+  push:
+    paths:
+      - "docs/**"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  wiki-deploy:
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.extract_branch.outputs.branch }}
+          fetch-depth: 0
+      - name: Set up deploy keys to push to remote
+        run: |
+          # Write deploy key to ~/.ssh/id_ed25519. Git will automatically
+          # use ~/.ssh/id_ed25519 to log in to github.com (see `man ssh`)
+          mkdir -p ~/.ssh
+          echo "${{ secrets.WIKI_DEPLOY_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+      - name: Set up wiki repo
+        run: |
+          git clone --filter=tree:0 --no-checkout git@github.com:dpnspn/aiomax.wiki.git temp
+          cp -r temp/.git docs/.git
+          rm -rf temp
+      - name: Push commits to main wiki remote
+        run: |
+          cd docs
+          git config user.name "$(git -C .. log -1 --pretty=%an)"
+          git config user.email "$(git -C .. log -1 --pretty=%ae)"
+          git add -A
+          git update-index --skip-worktree README.md
+          git commit -m "${{ github.event.head_commit.message }}"
+          git push -f origin HEAD:master
