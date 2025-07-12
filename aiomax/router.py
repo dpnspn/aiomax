@@ -32,7 +32,7 @@ class Router:
             "bot_removed": [],
             "user_added": [],
             "user_removed": [],
-            "on_error": []
+            "on_exception": []
         }  # handlers in this router
         self._commands: dict[
             str, list[CommandHandler]
@@ -279,13 +279,13 @@ class Router:
 
         return decorator
 
-    def on_error(self):
+    def on_exception(self):
         """
         Decorator for handling errors in handlers.
         """
 
         def decorator(func):
-            self._handlers["on_error"].append(
+            self._handlers["on_exception"].append(
                 Handler(call=func)
             )
             return func

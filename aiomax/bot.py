@@ -773,14 +773,11 @@ class Bot(Router):
         try:
             await handler.call(*args, **kwargs)
         
-        # calling on_error
+        # calling on_exception
         except Exception as e:
-            # getting ErrorContext
-            # ctx = ErrorContext(*args)
-
             # calling handlers
-            for i in self.handlers['on_error']:
-                asyncio.create_task(i.call(e))
+            for i in self.handlers['on_exception']:
+                asyncio.create_task(i.call(e, *args, **kwargs))
             
 
     async def handle_update(self, update: dict):
