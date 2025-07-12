@@ -1337,6 +1337,33 @@ class MessageDeletePayload:
         return self.message.content
 
 
+class MessageEditPayload:
+    def __init__(
+        self,
+        timestamp: int,
+        after: Message = None,
+        before: "Message | None" = None,
+        bot=None,
+    ):
+        """
+        Payload that is sent to the `Bot.on_message_edit` decorator.
+
+        :param timestamp: Timestamp of the message deletion.
+        :param before: Cached Message object - state the message was before the edit.
+        May be None if message was not cached
+        :param after: Edited Message object.
+        """
+        self.timestamp: int = timestamp
+        self.before: "Message | None" = before
+        self.after: Message = after
+        self.bot = bot
+
+
+    @property
+    def content(self) -> str:
+        return self.after.content
+
+
 class ChatTitleEditPayload:
     def __init__(
         self,
@@ -1458,3 +1485,9 @@ class UserMembershipPayload:
             data.get("is_channel", False),
             data.get("inviter_id", data.get("admin_id")),
         )
+
+
+class ExceptionContext:
+    def __init__(self, handler_type: str, original_obj: any):
+        self.handler_type: str = handler_type
+        self.original_obj: any = original_obj

@@ -24,6 +24,7 @@ from .types import (
     ImageRequestPayload,
     Message,
     MessageDeletePayload,
+    MessageEditPayload,
     PhotoAttachment,
     User,
     UserMembershipPayload,
@@ -883,18 +884,19 @@ class Bot(Router):
                 self.cache.add_message(message)
 
             # handling
+            payload = MessageEditPayload(
+                update["timestamp"], message, old_message, self
+            )
             for handler in self.handlers[update_type]:
                 filters = [filter(message) for filter in handler.filters]
 
                 if all(filters):
                     kwargs = utils.context_kwargs(
                         handler.call,
-                        before=old_message,
-                        after=message,
                         cursor=cursor,
                     )
                     asyncio.create_task(self.call_update(
-                        handler, old_message, message, **kwargs
+                        handler, payload, **kwargs
                     ))
 
             # handle logs
