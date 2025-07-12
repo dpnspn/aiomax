@@ -20,6 +20,7 @@ from .types import (
     ChatMembershipPayload,
     ChatTitleEditPayload,
     CommandContext,
+    ExceptionContext,
     FileAttachment,
     Handler,
     ImageRequestPayload,
@@ -776,9 +777,12 @@ class Bot(Router):
 
         # calling on_exception
         except Exception as e:
+            ctx = ExceptionContext(
+                e, args[0] if len(args) > 0 else None
+            )
             # calling handlers
             for i in self.handlers["on_exception"]:
-                asyncio.create_task(i.call(e, *args, **kwargs))
+                asyncio.create_task(i.call(ctx))
 
     async def handle_update(self, update: dict):
         """
@@ -935,7 +939,7 @@ class Bot(Router):
                 asyncio.create_task(self.call_update(i, payload, **kwargs))
 
         if update_type == "chat_title_changed":
-            payload = ChatTitleEditPayload.from_json(update)
+            payload = ChatTitleEditPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
 
             bot_logger.debug(
@@ -948,7 +952,7 @@ class Bot(Router):
                 asyncio.create_task(self.call_update(i, payload, **kwargs))
 
         if update_type == "bot_added" or update_type == "bot_removed":
-            payload = ChatMembershipPayload.from_json(update)
+            payload = ChatMembershipPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
 
             for i in self.handlers[update_type]:
@@ -956,7 +960,7 @@ class Bot(Router):
                 asyncio.create_task(self.call_update(i, payload, **kwargs))
 
         if update_type == "user_added" or update_type == "user_removed":
-            payload = UserMembershipPayload.from_json(update)
+            payload = UserMembershipPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
 
             for i in self.handlers[update_type]:

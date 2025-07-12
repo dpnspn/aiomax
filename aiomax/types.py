@@ -1335,6 +1335,39 @@ class MessageDeletePayload:
             return None
 
         return self.message.content
+    
+    async def send(
+        self,
+        text: "str | None" = None,
+        format: "Literal['html', 'markdown', 'default'] | None" = "default",
+        notify: bool = True,
+        disable_link_preview: bool = False,
+        keyboard: """list[list[buttons.Button]] \
+        | buttons.KeyboardBuilder \
+        | None""" = None,
+        attachments: "list[Attachment] | Attachment | None" = None,
+    ) -> "Message":
+        """
+        Send a message to the chat the deleted message was sent to.
+
+        :param text: Message text. Up to 4000 characters
+        :param format: Message format. Bot.default_format by default
+        :param notify: Whether to notify users about the message.
+            True by default.
+        :param disable_link_preview: Whether to disable link preview.
+        False by default
+        :param keyboard: An inline keyboard to attach to the message
+        :param attachments: List of attachments
+        """
+        return await self.bot.send_message(
+            text,
+            chat_id=self.chat_id,
+            format=format,
+            notify=notify,
+            disable_link_preview=disable_link_preview,
+            keyboard=keyboard,
+            attachments=attachments,
+        )
 
 
 class MessageEditPayload:
@@ -1362,6 +1395,70 @@ class MessageEditPayload:
     @property
     def content(self) -> str:
         return self.after.content
+    
+    async def send(
+        self,
+        text: "str | None" = None,
+        format: "Literal['html', 'markdown', 'default'] | None" = "default",
+        notify: bool = True,
+        disable_link_preview: bool = False,
+        keyboard: """list[list[buttons.Button]] \
+        | buttons.KeyboardBuilder \
+        | None""" = None,
+        attachments: "list[Attachment] | Attachment | None" = None,
+    ) -> "Message":
+        """
+        Send a message to the chat the edited message was sent to.
+
+        :param text: Message text. Up to 4000 characters
+        :param format: Message format. Bot.default_format by default
+        :param notify: Whether to notify users about the message.
+            True by default.
+        :param disable_link_preview: Whether to disable link preview.
+        False by default
+        :param keyboard: An inline keyboard to attach to the message
+        :param attachments: List of attachments
+        """
+        return await self.after.send(
+            text,
+            format=format,
+            notify=notify,
+            disable_link_preview=disable_link_preview,
+            keyboard=keyboard,
+            attachments=attachments,
+        )
+    
+    async def reply(
+        self,
+        text: "str | None" = None,
+        format: "Literal['html', 'markdown', 'default'] | None" = "default",
+        notify: bool = True,
+        disable_link_preview: bool = False,
+        keyboard: """list[list[buttons.Button]] \
+        | buttons.KeyboardBuilder \
+        | None""" = None,
+        attachments: "list[Attachment] | Attachment | None" = None,
+    ) -> "Message":
+        """
+        Reply to the edited message.
+
+        :param text: Message text. Up to 4000 characters
+        :param format: Message format. Bot.default_format by default
+        :param notify: Whether to notify users about the message.
+            True by default.
+        :param disable_link_preview: Whether to disable link preview.
+        False by default
+        :param keyboard: An inline keyboard to attach to the message
+        :param attachments: List of attachments
+        """
+        return await self.after.reply(
+            text,
+            format=format,
+            notify=notify,
+            disable_link_preview=disable_link_preview,
+            keyboard=keyboard,
+            attachments=attachments,
+        )
 
 
 class ChatTitleEditPayload:
@@ -1371,6 +1468,7 @@ class ChatTitleEditPayload:
         user: User,
         chat_id: "int | None" = None,
         title: "str | None" = None,
+        bot = None
     ):
         """
         Payload that is sent to the `Bot.on_chat_title_change` decorator.
@@ -1384,13 +1482,50 @@ class ChatTitleEditPayload:
         self.user: User = user
         self.chat_id: "int | None" = chat_id
         self.title: "str | None" = title
+        self.bot = bot
 
     @property
     def user_id(self):
         return self.user.user_id
+    
+    async def send(
+        self,
+        text: "str | None" = None,
+        format: "Literal['html', 'markdown', 'default'] | None" = "default",
+        notify: bool = True,
+        disable_link_preview: bool = False,
+        keyboard: """list[list[buttons.Button]] \
+        | buttons.KeyboardBuilder \
+        | None""" = None,
+        attachments: "list[Attachment] | Attachment | None" = None,
+    ) -> "Message":
+        """
+        Send a message to the chat with the edited title.
+
+        :param text: Message text. Up to 4000 characters
+        :param format: Message format. Bot.default_format by default
+        :param notify: Whether to notify users about the message.
+            True by default.
+        :param disable_link_preview: Whether to disable link preview.
+        False by default
+        :param keyboard: An inline keyboard to attach to the message
+        :param attachments: List of attachments
+        """
+        if self.bot is None:
+            return
+        
+        return await self.bot.send_message(
+            text,
+            chat_id=self.chat_id,
+            format=format,
+            notify=notify,
+            disable_link_preview=disable_link_preview,
+            keyboard=keyboard,
+            attachments=attachments,
+        )
 
     @staticmethod
-    def from_json(data: dict) -> "ChatTitleEditPayload | None":
+    def from_json(data: dict, bot = None) -> "ChatTitleEditPayload | None":
         if data is None:
             return None
 
@@ -1399,6 +1534,7 @@ class ChatTitleEditPayload:
             User.from_json(data["user"]),
             data.get("chat_id"),
             data.get("title"),
+            bot
         )
 
 
@@ -1409,6 +1545,7 @@ class ChatMembershipPayload:
         user: User,
         chat_id: "int | None" = None,
         is_channel: bool = False,
+        bot = None
     ):
         """
         Payload that is sent to the `Bot.on_bot_add`
@@ -1424,13 +1561,52 @@ class ChatMembershipPayload:
         self.user: User = user
         self.chat_id: "int | None" = chat_id
         self.is_channel: bool = is_channel
+        self.bot = bot
 
     @property
     def user_id(self):
         return self.user.user_id
+    
+    async def send(
+        self,
+        text: "str | None" = None,
+        format: "Literal['html', 'markdown', 'default'] | None" = "default",
+        notify: bool = True,
+        disable_link_preview: bool = False,
+        keyboard: """list[list[buttons.Button]] \
+        | buttons.KeyboardBuilder \
+        | None""" = None,
+        attachments: "list[Attachment] | Attachment | None" = None,
+    ) -> "Message":
+        """
+        Send a message to the chat the bot joined to.
+
+        Will raise an error if the bot left the chat.
+
+        :param text: Message text. Up to 4000 characters
+        :param format: Message format. Bot.default_format by default
+        :param notify: Whether to notify users about the message.
+            True by default.
+        :param disable_link_preview: Whether to disable link preview.
+        False by default
+        :param keyboard: An inline keyboard to attach to the message
+        :param attachments: List of attachments
+        """
+        if self.bot is None:
+            return
+        
+        return await self.bot.send_message(
+            text,
+            chat_id=self.chat_id,
+            format=format,
+            notify=notify,
+            disable_link_preview=disable_link_preview,
+            keyboard=keyboard,
+            attachments=attachments,
+        )
 
     @staticmethod
-    def from_json(data: dict) -> "ChatMembershipPayload | None":
+    def from_json(data: dict, bot = None) -> "ChatMembershipPayload | None":
         if data is None:
             return None
 
@@ -1439,6 +1615,7 @@ class ChatMembershipPayload:
             User.from_json(data["user"]),
             data.get("chat_id"),
             data.get("is_channel", False),
+            bot
         )
 
 
@@ -1450,6 +1627,7 @@ class UserMembershipPayload:
         chat_id: "int | None" = None,
         is_channel: bool = False,
         initiator: "int | None" = None,
+        bot = None
     ):
         """
         Payload that is sent to the `Bot.on_user_add` or
@@ -1468,13 +1646,50 @@ class UserMembershipPayload:
         self.chat_id: "int | None" = chat_id
         self.is_channel: bool = is_channel
         self.initiator: "int | None" = initiator
+        self.bot = bot
 
     @property
     def user_id(self):
         return self.user.user_id
+    
+    async def send(
+        self,
+        text: "str | None" = None,
+        format: "Literal['html', 'markdown', 'default'] | None" = "default",
+        notify: bool = True,
+        disable_link_preview: bool = False,
+        keyboard: """list[list[buttons.Button]] \
+        | buttons.KeyboardBuilder \
+        | None""" = None,
+        attachments: "list[Attachment] | Attachment | None" = None,
+    ) -> "Message":
+        """
+        Send a message to the chat the user joined to or left from.
+
+        :param text: Message text. Up to 4000 characters
+        :param format: Message format. Bot.default_format by default
+        :param notify: Whether to notify users about the message.
+            True by default.
+        :param disable_link_preview: Whether to disable link preview.
+        False by default
+        :param keyboard: An inline keyboard to attach to the message
+        :param attachments: List of attachments
+        """
+        if self.bot is None:
+            return
+        
+        return await self.bot.send_message(
+            text,
+            chat_id=self.chat_id,
+            format=format,
+            notify=notify,
+            disable_link_preview=disable_link_preview,
+            keyboard=keyboard,
+            attachments=attachments,
+        )
 
     @staticmethod
-    def from_json(data: dict) -> "UserMembershipPayload | None":
+    def from_json(data: dict, bot = None) -> "UserMembershipPayload | None":
         if data is None:
             return None
 
@@ -1484,10 +1699,77 @@ class UserMembershipPayload:
             data.get("chat_id"),
             data.get("is_channel", False),
             data.get("inviter_id", data.get("admin_id")),
+            bot
         )
 
 
 class ExceptionContext:
-    def __init__(self, handler_type: str, original_obj: any):
-        self.handler_type: str = handler_type
+    def __init__(self, exception: Exception, original_obj: any):
+        self.exception: Exception = exception
         self.original_obj: any = original_obj
+        self.sendable: bool = False
+
+        # checking for send and reply
+        if hasattr(original_obj, 'send'):
+            self.send = self.original_obj.send
+            self.sendable = True
+
+        if hasattr(original_obj, 'reply'):
+            self.reply = self.original_obj.reply
+        else:
+            self.reply = self.send
+
+
+    async def send(
+        self,
+        text: "str | None" = None,
+        format: "Literal['html', 'markdown', 'default'] | None" = "default",
+        notify: bool = True,
+        disable_link_preview: bool = False,
+        keyboard: """list[list[buttons.Button]] \
+        | buttons.KeyboardBuilder \
+        | None""" = None,
+        attachments: "list[Attachment] | Attachment | None" = None,
+    ) -> "Message":
+        """
+        Send a message in the original event's chat.
+        Does nothing if the original event doesn't have a send function.
+
+        :param text: Message text. Up to 4000 characters
+        :param format: Message format. Bot.default_format by default
+        :param notify: Whether to notify users about the message.
+            True by default.
+        :param disable_link_preview: Whether to disable link preview.
+        False by default
+        :param keyboard: An inline keyboard to attach to the message
+        :param attachments: List of attachments
+        """
+        pass
+
+
+    async def reply(
+        self,
+        text: "str | None" = None,
+        format: "Literal['html', 'markdown', 'default'] | None" = "default",
+        notify: bool = True,
+        disable_link_preview: bool = False,
+        keyboard: """list[list[buttons.Button]] \
+        | buttons.KeyboardBuilder \
+        | None""" = None,
+        attachments: "list[Attachment] | Attachment | None" = None,
+    ) -> "Message":
+        """
+        Reply to the original event's message.
+        Does nothing if the original event doesn't have a send function,
+        and sends the message instead if the event doesn't have a reply function.
+
+        :param text: Message text. Up to 4000 characters
+        :param format: Message format. Bot.default_format by default
+        :param notify: Whether to notify users about the message.
+            True by default.
+        :param disable_link_preview: Whether to disable link preview.
+        False by default
+        :param keyboard: An inline keyboard to attach to the message
+        :param attachments: List of attachments
+        """
+        pass
