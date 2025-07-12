@@ -32,7 +32,7 @@ class Router:
             "bot_removed": [],
             "user_added": [],
             "user_removed": [],
-            "on_exception": []
+            "on_exception": [],
         }  # handlers in this router
         self._commands: dict[
             str, list[CommandHandler]
@@ -207,9 +207,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["bot_started"].append(
-                Handler(call=func)
-            )
+            self._handlers["bot_started"].append(Handler(call=func))
             return func
 
         return decorator
@@ -220,9 +218,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["chat_title_changed"].append(
-                Handler(call=func)
-            )
+            self._handlers["chat_title_changed"].append(Handler(call=func))
             return func
 
         return decorator
@@ -233,9 +229,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["bot_added"].append(
-                Handler(call=func)
-            )
+            self._handlers["bot_added"].append(Handler(call=func))
             return func
 
         return decorator
@@ -246,9 +240,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["bot_removed"].append(
-                Handler(call=func)
-            )
+            self._handlers["bot_removed"].append(Handler(call=func))
             return func
 
         return decorator
@@ -259,9 +251,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["user_added"].append(
-                Handler(call=func)
-            )
+            self._handlers["user_added"].append(Handler(call=func))
             return func
 
         return decorator
@@ -272,9 +262,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["user_removed"].append(
-                Handler(call=func)
-            )
+            self._handlers["user_removed"].append(Handler(call=func))
             return func
 
         return decorator
@@ -285,9 +273,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["on_exception"].append(
-                Handler(call=func)
-            )
+            self._handlers["on_exception"].append(Handler(call=func))
             return func
 
         return decorator
@@ -298,9 +284,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["on_ready"].append(
-                Handler(call=func)
-            )
+            self._handlers["on_ready"].append(Handler(call=func))
             return func
 
         return decorator
@@ -332,9 +316,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["message_chat_created"].append(
-                Handler(call=func)
-            )
+            self._handlers["message_chat_created"].append(Handler(call=func))
             return func
 
         return decorator
