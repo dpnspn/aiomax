@@ -1199,7 +1199,7 @@ class Callback:
         :param keyboard: An inline keyboard to attach to the message
         :param attachments: List of attachments
         """
-        if notification is None and text is None or attachments is None:
+        if notification is None and text is None and attachments is None:
             raise exceptions.AiomaxException(
                 "Either notification, text or attachments must be specified"
             )
@@ -1471,7 +1471,7 @@ class UserMembershipPayload:
 
     @property
     def user_id(self):
-        return self.sender.user_id
+        return self.user.user_id
 
     @staticmethod
     def from_json(data: dict) -> "UserMembershipPayload | None":
