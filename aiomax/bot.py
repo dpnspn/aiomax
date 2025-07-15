@@ -777,9 +777,7 @@ class Bot(Router):
 
         # calling on_exception
         except Exception as e:
-            ctx = ExceptionContext(
-                e, args[0] if len(args) > 0 else None
-            )
+            ctx = ExceptionContext(e, args[0] if len(args) > 0 else None)
             # calling handlers
             for i in self.handlers["on_exception"]:
                 asyncio.create_task(i.call(ctx))
@@ -900,9 +898,9 @@ class Bot(Router):
                         handler.call,
                         cursor=cursor,
                     )
-                    asyncio.create_task(self.call_update(
-                        handler, payload, **kwargs
-                    ))
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
             # handle logs
             bot_logger.debug(f'Message "{message.body.text}" edited')

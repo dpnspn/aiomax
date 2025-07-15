@@ -1335,7 +1335,7 @@ class MessageDeletePayload:
             return None
 
         return self.message.content
-    
+
     async def send(
         self,
         text: "str | None" = None,
@@ -1392,11 +1392,9 @@ class MessageEditPayload:
         self.after: Message = after
         self.bot = bot
 
-
     @property
     def content(self) -> str:
         return self.after.content
-    
 
     async def send(
         self,
@@ -1429,7 +1427,7 @@ class MessageEditPayload:
             keyboard=keyboard,
             attachments=attachments,
         )
-    
+
     async def reply(
         self,
         text: "str | None" = None,
@@ -1470,7 +1468,7 @@ class ChatTitleEditPayload:
         user: User,
         chat_id: "int | None" = None,
         title: "str | None" = None,
-        bot = None
+        bot=None,
     ):
         """
         Payload that is sent to the `Bot.on_chat_title_change` decorator.
@@ -1489,7 +1487,7 @@ class ChatTitleEditPayload:
     @property
     def user_id(self):
         return self.user.user_id
-    
+
     async def send(
         self,
         text: "str | None" = None,
@@ -1515,7 +1513,7 @@ class ChatTitleEditPayload:
         """
         if self.bot is None:
             return
-        
+
         return await self.bot.send_message(
             text,
             chat_id=self.chat_id,
@@ -1527,7 +1525,7 @@ class ChatTitleEditPayload:
         )
 
     @staticmethod
-    def from_json(data: dict, bot = None) -> "ChatTitleEditPayload | None":
+    def from_json(data: dict, bot=None) -> "ChatTitleEditPayload | None":
         if data is None:
             return None
 
@@ -1536,7 +1534,7 @@ class ChatTitleEditPayload:
             User.from_json(data["user"]),
             data.get("chat_id"),
             data.get("title"),
-            bot
+            bot,
         )
 
 
@@ -1547,7 +1545,7 @@ class ChatMembershipPayload:
         user: User,
         chat_id: "int | None" = None,
         is_channel: bool = False,
-        bot = None
+        bot=None,
     ):
         """
         Payload that is sent to the `Bot.on_bot_add`
@@ -1568,7 +1566,7 @@ class ChatMembershipPayload:
     @property
     def user_id(self):
         return self.user.user_id
-    
+
     async def send(
         self,
         text: "str | None" = None,
@@ -1596,7 +1594,7 @@ class ChatMembershipPayload:
         """
         if self.bot is None:
             return
-        
+
         return await self.bot.send_message(
             text,
             chat_id=self.chat_id,
@@ -1608,7 +1606,7 @@ class ChatMembershipPayload:
         )
 
     @staticmethod
-    def from_json(data: dict, bot = None) -> "ChatMembershipPayload | None":
+    def from_json(data: dict, bot=None) -> "ChatMembershipPayload | None":
         if data is None:
             return None
 
@@ -1617,7 +1615,7 @@ class ChatMembershipPayload:
             User.from_json(data["user"]),
             data.get("chat_id"),
             data.get("is_channel", False),
-            bot
+            bot,
         )
 
 
@@ -1629,7 +1627,7 @@ class UserMembershipPayload:
         chat_id: "int | None" = None,
         is_channel: bool = False,
         initiator: "int | None" = None,
-        bot = None
+        bot=None,
     ):
         """
         Payload that is sent to the `Bot.on_user_add` or
@@ -1653,7 +1651,7 @@ class UserMembershipPayload:
     @property
     def user_id(self):
         return self.user.user_id
-    
+
     async def send(
         self,
         text: "str | None" = None,
@@ -1679,7 +1677,7 @@ class UserMembershipPayload:
         """
         if self.bot is None:
             return
-        
+
         return await self.bot.send_message(
             text,
             chat_id=self.chat_id,
@@ -1691,7 +1689,7 @@ class UserMembershipPayload:
         )
 
     @staticmethod
-    def from_json(data: dict, bot = None) -> "UserMembershipPayload | None":
+    def from_json(data: dict, bot=None) -> "UserMembershipPayload | None":
         if data is None:
             return None
 
@@ -1701,7 +1699,7 @@ class UserMembershipPayload:
             data.get("chat_id"),
             data.get("is_channel", False),
             data.get("inviter_id", data.get("admin_id")),
-            bot
+            bot,
         )
 
 
@@ -1712,15 +1710,14 @@ class ExceptionContext:
         self.sendable: bool = False
 
         # checking for send and reply
-        if hasattr(obj, 'send'):
+        if hasattr(obj, "send"):
             self.send = self.obj.send
             self.sendable = True
 
-        if hasattr(obj, 'reply'):
+        if hasattr(obj, "reply"):
             self.reply = self.obj.reply
         else:
             self.reply = self.send
-
 
     async def send(
         self,
@@ -1747,7 +1744,6 @@ class ExceptionContext:
         :param attachments: List of attachments
         """
         pass
-
 
     async def reply(
         self,
