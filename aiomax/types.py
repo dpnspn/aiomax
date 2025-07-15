@@ -1374,7 +1374,7 @@ class MessageEditPayload:
     def __init__(
         self,
         timestamp: int,
-        after: Message = None,
+        after: Message,
         before: "Message | None" = None,
         bot=None,
     ):
@@ -1382,7 +1382,8 @@ class MessageEditPayload:
         Payload that is sent to the `Bot.on_message_edit` decorator.
 
         :param timestamp: Timestamp of the message deletion.
-        :param before: Cached Message object - state the message was before the edit.
+        :param before: Cached Message object - state the message was before
+            the edit.
         May be None if message was not cached
         :param after: Edited Message object.
         """
@@ -1396,6 +1397,7 @@ class MessageEditPayload:
     def content(self) -> str:
         return self.after.content
     
+
     async def send(
         self,
         text: "str | None" = None,
@@ -1704,18 +1706,18 @@ class UserMembershipPayload:
 
 
 class ExceptionContext:
-    def __init__(self, exception: Exception, original_obj: any):
+    def __init__(self, exception: Exception, obj: any):
         self.exception: Exception = exception
-        self.original_obj: any = original_obj
+        self.obj: any = obj
         self.sendable: bool = False
 
         # checking for send and reply
-        if hasattr(original_obj, 'send'):
-            self.send = self.original_obj.send
+        if hasattr(obj, 'send'):
+            self.send = self.obj.send
             self.sendable = True
 
-        if hasattr(original_obj, 'reply'):
-            self.reply = self.original_obj.reply
+        if hasattr(obj, 'reply'):
+            self.reply = self.obj.reply
         else:
             self.reply = self.send
 
@@ -1761,7 +1763,8 @@ class ExceptionContext:
         """
         Reply to the original event's message.
         Does nothing if the original event doesn't have a send function,
-        and sends the message instead if the event doesn't have a reply function.
+        and sends the message instead if the event doesn't have a reply
+            function.
 
         :param text: Message text. Up to 4000 characters
         :param format: Message format. Bot.default_format by default
