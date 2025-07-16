@@ -1199,9 +1199,14 @@ class Callback:
         :param keyboard: An inline keyboard to attach to the message
         :param attachments: List of attachments
         """
-        if notification is None and text is None and attachments is None:
+        if (
+            notification is None
+            and text is None
+            and attachments is None
+            and keyboard is None
+        ):
             raise exceptions.AiomaxException(
-                "Either notification, text or attachments must be specified"
+                "Either notification, text, attachments or keyboard must be specified"
             )
         body = {"notification": notification, "message": None}
         if keyboard is None and self.message is not None:
@@ -1652,6 +1657,7 @@ class UserMembershipPayload:
     def user_id(self):
         return self.user.user_id
 
+      
     async def send(
         self,
         text: "str | None" = None,
@@ -1687,6 +1693,7 @@ class UserMembershipPayload:
             keyboard=keyboard,
             attachments=attachments,
         )
+
 
     @staticmethod
     def from_json(data: dict, bot=None) -> "UserMembershipPayload | None":

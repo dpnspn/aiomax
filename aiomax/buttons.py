@@ -210,12 +210,14 @@ class KeyboardBuilder:
             self.buttons.append([])
 
         self.buttons[-1].extend(buttons)
+        return self
 
     def row(self, *buttons: Button):
         """
         Add a row of buttons
         """
         self.buttons.append(list(buttons))
+        return self
 
     def table(self, in_row: int, *buttons: Button):
         """
@@ -233,3 +235,4 @@ class KeyboardBuilder:
 
             self.add(button)
             counter -= 1
+        return self

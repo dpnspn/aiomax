@@ -45,3 +45,12 @@ class UnknownErrorException(AiomaxException):
     def __init__(self, text: str, description: "str | None" = None):
         self.text: str = text
         self.description: str | None = description
+
+
+class AccessDeniedException(AiomaxException):
+    """
+    Access Denied
+    """
+
+    def __init__(self, description: "str | None" = None):
+        self.description: str | None = description

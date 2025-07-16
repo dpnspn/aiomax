@@ -119,7 +119,7 @@ class Router:
         return self.parent.parent
 
     def add_router(self, router: "Router"):
-        if router.parent is None:
+        if router.parent is not None:
             raise ValueError("Router already has a parent")
 
         router.parent = self
