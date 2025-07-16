@@ -775,10 +775,15 @@ class Bot(Router):
         try:
             await handler.call(*args, **kwargs)
 
-        # calling on_exception
+        # handling error
         except Exception as e:
+            # if there's no handlers throw the error
+            if len(self.handlers["on_exception"]) == 0:
+                raise e
+
+            # handling error
             ctx = ExceptionContext(e, args[0] if len(args) > 0 else None)
-            # calling handlers
+
             for i in self.handlers["on_exception"]:
                 asyncio.create_task(i.call(ctx))
 
