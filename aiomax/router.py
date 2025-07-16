@@ -32,6 +32,7 @@ class Router:
             "bot_removed": [],
             "user_added": [],
             "user_removed": [],
+            "on_exception": [],
         }  # handlers in this router
         self._commands: dict[
             str, list[CommandHandler]
@@ -206,7 +207,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["bot_started"].append(func)
+            self._handlers["bot_started"].append(Handler(call=func))
             return func
 
         return decorator
@@ -217,7 +218,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["chat_title_changed"].append(func)
+            self._handlers["chat_title_changed"].append(Handler(call=func))
             return func
 
         return decorator
@@ -228,7 +229,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["bot_added"].append(func)
+            self._handlers["bot_added"].append(Handler(call=func))
             return func
 
         return decorator
@@ -239,7 +240,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["bot_removed"].append(func)
+            self._handlers["bot_removed"].append(Handler(call=func))
             return func
 
         return decorator
@@ -250,7 +251,7 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["user_added"].append(func)
+            self._handlers["user_added"].append(Handler(call=func))
             return func
 
         return decorator
@@ -261,18 +262,29 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["user_removed"].append(func)
+            self._handlers["user_removed"].append(Handler(call=func))
+            return func
+
+        return decorator
+
+    def on_exception(self):
+        """
+        Decorator for handling errors in handlers.
+        """
+
+        def decorator(func):
+            self._handlers["on_exception"].append(Handler(call=func))
             return func
 
         return decorator
 
     def on_ready(self):
         """
-        Decorator for receiving messages.
+        Decorator that gets called when the bot session starts.
         """
 
         def decorator(func):
-            self._handlers["on_ready"].append(func)
+            self._handlers["on_ready"].append(Handler(call=func))
             return func
 
         return decorator
@@ -300,11 +312,11 @@ class Router:
 
     def on_button_chat_create(self):
         """
-        Decorator for receiving button presses.
+        Decorator for receiving chat button presses.
         """
 
         def decorator(func):
-            self._handlers["message_chat_created"].append(func)
+            self._handlers["message_chat_created"].append(Handler(call=func))
             return func
 
         return decorator
