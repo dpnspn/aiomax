@@ -1,18 +1,15 @@
-from typing import Any
-
-
 class FSMStorage:
     def __init__(self):
-        self.states: dict[int, Any] = {}
+        self.states: dict[int, any] = {}
         self.data: dict[int, dict] = {}
 
-    def get_state(self, user_id: int) -> Any:
+    def get_state(self, user_id: int) -> any:
         """
         Gets user's state
         """
         return self.states.get(user_id)
 
-    def get_data(self, user_id: int, key: "Any | None" = None) -> dict:
+    def get_data(self, user_id: int, key: "any | None" = None) -> dict:
         """
         Gets user's data
         """
@@ -21,7 +18,7 @@ class FSMStorage:
             return data
         return data[key]
 
-    def change_state(self, user_id: int, new: Any):
+    def change_state(self, user_id: int, new: any):
         """
         Changes user's state
         """
@@ -42,13 +39,13 @@ class FSMStorage:
 
         self.data[user_id] = {**data, **kwdata}
 
-    def clear_state(self, user_id: int) -> Any:
+    def clear_state(self, user_id: int) -> any:
         """
         Clears user's state and returns old
         """
         return self.states.pop(user_id, None)
 
-    def clear_data(self, user_id: int) -> Any:
+    def clear_data(self, user_id: int) -> any:
         """
         Clears user's data and returns old
         """
@@ -67,19 +64,19 @@ class FSMCursor:
         self.storage: FSMStorage = storage
         self.user_id: int = user_id
 
-    def get_state(self) -> Any:
+    def get_state(self) -> any:
         """
         Gets user's state
         """
         return self.storage.get_state(self.user_id)
 
-    def get_data(self, key: "Any | None" = None) -> dict:
+    def get_data(self, key: "any | None" = None) -> dict:
         """
         Gets user's data
         """
         return self.storage.get_data(self.user_id, key)
 
-    def change_state(self, new: Any):
+    def change_state(self, new: any):
         """
         Changes user's state
         """
@@ -94,13 +91,13 @@ class FSMCursor:
     def set_data(self, data: "dict | None" = None, **kwdata):
         self.storage.set_data(self.user_id, data, **kwdata)
 
-    def clear_state(self) -> Any:
+    def clear_state(self) -> any:
         """
         Deletes user's state and returns old
         """
         return self.storage.clear_state(self.user_id)
 
-    def clear_data(self) -> Any:
+    def clear_data(self) -> any:
         """
         Deletes user's data and returns old
         """

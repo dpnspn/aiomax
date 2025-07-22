@@ -1,5 +1,4 @@
 import re
-from typing import Any
 
 
 def normalize_filter(filter_):
@@ -149,7 +148,7 @@ def papaya(obj: any):
 
 
 class state(_filter):
-    def __init__(self, state: Any):
+    def __init__(self, state: any):
         """
         :param state: State to check
 
@@ -157,7 +156,7 @@ class state(_filter):
         """
         self.state = state
 
-    def __call__(self, obj: Any):
+    def __call__(self, obj: any):
         if not hasattr(obj, "user_id"):
             raise Exception(f"Class {type(object).__name__} has no user id")
 
