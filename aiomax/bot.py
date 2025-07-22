@@ -20,10 +20,13 @@ from .types import (
     ChatMembershipPayload,
     ChatTitleEditPayload,
     CommandContext,
+    ExceptionContext,
     FileAttachment,
+    Handler,
     ImageRequestPayload,
     Message,
     MessageDeletePayload,
+    MessageEditPayload,
     PhotoAttachment,
     User,
     UserMembershipPayload,
@@ -765,6 +768,25 @@ class Bot(Router):
 
         return json
 
+    async def call_update(self, handler: Handler, *args, **kwargs):
+        """
+        Calls a handler and handles all errors.
+        """
+        try:
+            await handler.call(*args, **kwargs)
+
+        # handling error
+        except Exception as e:
+            # if there's no handlers throw the error
+            if len(self.handlers["on_exception"]) == 0:
+                raise e
+
+            # handling error
+            ctx = ExceptionContext(e, args[0] if len(args) > 0 else None)
+
+            for i in self.handlers["on_exception"]:
+                asyncio.create_task(i.call(ctx))
+
     async def handle_update(self, update: dict):
         """
         Handles an update.
@@ -823,8 +845,10 @@ class Bot(Router):
                 for i in self.commands[check_name]:
                     kwargs = utils.context_kwargs(i.call, cursor=cursor)
                     asyncio.create_task(
-                        i.call(
-                            CommandContext(self, message, name, args), **kwargs
+                        self.call_update(
+                            i,
+                            CommandContext(self, message, name, args),
+                            **kwargs,
                         )
                     )
 
@@ -844,7 +868,9 @@ class Bot(Router):
 
                 if all(filters):
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
-                    asyncio.create_task(handler.call(message, **kwargs))
+                    asyncio.create_task(
+                        self.call_update(handler, message, **kwargs)
+                    )
                     handled = True
 
             # handle logs
@@ -866,6 +892,9 @@ class Bot(Router):
                 self.cache.add_message(message)
 
             # handling
+            payload = MessageEditPayload(
+                update["timestamp"], message, old_message, self
+            )
             for handler in self.handlers[update_type]:
                 filters = [filter(message) for filter in handler.filters]
 
@@ -875,7 +904,7 @@ class Bot(Router):
                         cursor=cursor,
                     )
                     asyncio.create_task(
-                        handler.call(old_message, message, **kwargs)
+                        self.call_update(handler, payload, **kwargs)
                     )
 
             # handle logs
@@ -895,7 +924,9 @@ class Bot(Router):
 
                 if all(filters):
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
-                    asyncio.create_task(handler.call(payload, **kwargs))
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
             # handle logs
             bot_logger.debug(f'Message "{payload.content}" deleted')
@@ -907,11 +938,11 @@ class Bot(Router):
             bot_logger.debug(f'User "{payload.user!r}" started bot')
 
             for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i, cursor=cursor)
-                asyncio.create_task(i(payload, **kwargs))
+                kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                asyncio.create_task(self.call_update(i, payload, **kwargs))
 
         if update_type == "chat_title_changed":
-            payload = ChatTitleEditPayload.from_json(update)
+            payload = ChatTitleEditPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
 
             bot_logger.debug(
@@ -920,24 +951,24 @@ class Bot(Router):
             )
 
             for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i, cursor=cursor)
-                asyncio.create_task(i(payload, **kwargs))
+                kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                asyncio.create_task(self.call_update(i, payload, **kwargs))
 
         if update_type == "bot_added" or update_type == "bot_removed":
-            payload = ChatMembershipPayload.from_json(update)
+            payload = ChatMembershipPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
 
             for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i, cursor=cursor)
-                asyncio.create_task(i(payload, **kwargs))
+                kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                asyncio.create_task(self.call_update(i, payload, **kwargs))
 
         if update_type == "user_added" or update_type == "user_removed":
-            payload = UserMembershipPayload.from_json(update)
+            payload = UserMembershipPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
 
             for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i, cursor=cursor)
-                asyncio.create_task(i(payload, **kwargs))
+                kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                asyncio.create_task(self.call_update(i, payload, **kwargs))
 
         if update_type == "message_callback":
             handled = False
@@ -956,7 +987,9 @@ class Bot(Router):
 
                 if all(filters):
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
-                    asyncio.create_task(handler.call(callback, **kwargs))
+                    asyncio.create_task(
+                        self.call_update(handler, callback, **kwargs)
+                    )
                     handled = True
 
             if handled:
@@ -969,7 +1002,7 @@ class Bot(Router):
             bot_logger.debug(f'Created chat "{payload.start_payload}"')
 
             for i in self.handlers[update_type]:
-                asyncio.create_task(i(payload))
+                asyncio.create_task(self.call_update(i, payload))
 
     async def start_polling(
         self, session: "aiohttp.ClientSession | None" = None
@@ -997,7 +1030,7 @@ class Bot(Router):
 
             # ready event
             for i in self.handlers["on_ready"]:
-                asyncio.create_task(i())
+                asyncio.create_task(self.call_update(i))
 
             while self.polling:
                 try:
