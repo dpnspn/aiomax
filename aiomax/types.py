@@ -1206,7 +1206,8 @@ class Callback:
             and keyboard is None
         ):
             raise exceptions.AiomaxException(
-                "Either notification, text, attachments or keyboard must be specified"
+                "Either notification, text, attachments or keyboard "\
+                    "must be specified"
             )
         body = {"notification": notification, "message": None}
         if keyboard is None and self.message is not None:
