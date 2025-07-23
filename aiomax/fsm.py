@@ -9,7 +9,7 @@ class FSMStorage:
         """
         return self.states.get(user_id)
 
-    def get_data(self, user_id: int, key: "any | None" = None) -> dict:
+    def get_data(self, user_id: int, key: "any | None" = None) -> any | dict:
         """
         Gets user's data
         """
@@ -45,7 +45,7 @@ class FSMStorage:
         """
         return self.states.pop(user_id, None)
 
-    def clear_data(self, user_id: int) -> any:
+    def clear_data(self, user_id: int) -> dict:
         """
         Clears user's data and returns old
         """
@@ -70,7 +70,7 @@ class FSMCursor:
         """
         return self.storage.get_state(self.user_id)
 
-    def get_data(self, key: "any | None" = None) -> dict:
+    def get_data(self, key: "any | None" = None) -> any | dict:
         """
         Gets user's data
         """
@@ -97,7 +97,7 @@ class FSMCursor:
         """
         return self.storage.clear_state(self.user_id)
 
-    def clear_data(self) -> any:
+    def clear_data(self) -> dict:
         """
         Deletes user's data and returns old
         """
