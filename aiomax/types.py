@@ -1,4 +1,4 @@
-from typing import Callable, Literal, Optional
+from typing import Callable, Literal
 
 from . import buttons, exceptions, utils
 
@@ -929,7 +929,7 @@ class Handler:
         self,
         call: Callable,
         deco_filter: "Callable | None" = None,
-        router_filters: Optional[list[Callable]] = None,
+        router_filters: "list[Callable] | None" = None,
     ):
         if router_filters is None:
             router_filters = []
@@ -950,7 +950,7 @@ class MessageHandler(Handler):
         self,
         call: Callable,
         deco_filter: "Callable | None" = None,
-        router_filters: Optional[list[Callable]] = None,
+        router_filters: "list[Callable] | None" = None,
         detect_commands: bool = False,
     ):
         if router_filters is None:
