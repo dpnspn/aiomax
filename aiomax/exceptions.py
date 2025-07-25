@@ -55,6 +55,7 @@ class AccessDeniedException(AiomaxException):
     def __init__(self, description: "str | None" = None):
         self.description: "str | None" = description
 
+
 class NotFoundException(AiomaxException):
     """
     Something not found Exception
@@ -62,6 +63,7 @@ class NotFoundException(AiomaxException):
 
     def __init__(self, description: "str | None" = None):
         self.description: "str | None" = description
+
 
 class MessageNotFoundException(NotFoundException):
     """
