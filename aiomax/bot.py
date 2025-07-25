@@ -739,13 +739,16 @@ class Bot(Router):
 
         :param message_id: ID of the message to get info of
         """
-        response = await self.get(
-            f"https://botapi.max.ru/messages/{message_id}"
-        )
+        try:
+            response = await self.get(
+                f"https://botapi.max.ru/messages/{message_id}"
+            )
 
-        data = await response.json()
+            data = await response.json()
 
-        return Message.from_json(data)
+            return Message.from_json(data)
+        except exceptions.NotFoundException:
+            raise exceptions.MessageNotFoundException from None
 
     async def get_updates(self, limit: int = 100) -> tuple[int, dict]:
         """

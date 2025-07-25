@@ -994,7 +994,7 @@ class ImageRequestPayload:
             raise exceptions.AiomaxException("Token or URL must be specified")
         if not (url is None or token is None):
             raise exceptions.AiomaxException(
-                "Token and URL cannotbe specified at the same time"
+                "Token and URL cannot be specified at the same time"
             )
 
         self.url: "str | None" = url

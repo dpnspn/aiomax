@@ -44,13 +44,27 @@ class UnknownErrorException(AiomaxException):
 
     def __init__(self, text: str, description: "str | None" = None):
         self.text: str = text
-        self.description: str | None = description
+        self.description: "str | None" = description
 
 
 class AccessDeniedException(AiomaxException):
     """
-    Access Denied
+    Access Denied Exception
     """
 
     def __init__(self, description: "str | None" = None):
-        self.description: str | None = description
+        self.description: "str | None" = description
+
+class NotFoundException(AiomaxException):
+    """
+    Something not found Exception
+    """
+
+    def __init__(self, description: "str | None" = None):
+        self.description: "str | None" = description
+
+class MessageNotFoundException(NotFoundException):
+    """
+    Child `NotFoundException` exception class that is raised
+    in `Bot.get_message` function
+    """

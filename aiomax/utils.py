@@ -117,4 +117,7 @@ async def get_exception(response: aiohttp.ClientResponse):
     if text == "access.denied":
         return exceptions.AccessDeniedException(description)
 
+    if text == "not.found":
+        return exceptions.NotFoundException(description)
+
     return exceptions.UnknownErrorException(text, description)
