@@ -5,25 +5,15 @@ on:
     paths:
       - "docs/**"
       - "!docs/README.md"
+    branches:
+      - "main"
   workflow_dispatch: {}
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 
 jobs:
   wiki-deploy:
     runs-on: ubuntu-latest
-    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     steps:
-      - name: Extract branch name
-        shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-        id: extract_branch
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.extract_branch.outputs.branch }}
-          fetch-depth: 0
       - name: Set up deploy keys to push to remote
         run: |
           mkdir -p ~/.ssh
@@ -39,7 +29,7 @@ jobs:
           cd docs
           git config user.name "$(git -C .. log -1 --pretty=%an)"
           git config user.email "$(git -C .. log -1 --pretty=%ae)"
-          rm README.md
           git add -A
-          git commit -m "${{ github.event.head_commit.message }}"
+          git reset README.md
+          git commit -m "$(git log -1 --pretty=format:"%s")"
           git push -f origin HEAD:master
