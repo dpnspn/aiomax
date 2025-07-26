@@ -516,10 +516,7 @@ class Bot(Router):
         return await response.json()
 
     async def _upload(
-        self,
-        data: "IO | str",
-        type: str,
-        field_name: str = "data"
+        self, data: "IO | str", type: str, field_name: str = "data"
     ) -> dict:
         """
         Uploads a file to the server. Returns raw JSON with the token.
@@ -578,9 +575,7 @@ class Bot(Router):
         return AudioAttachment(token=token)
 
     async def upload_file(
-        self,
-        data: "IO | str",
-        filename: "str | None" = None
+        self, data: "IO | str", filename: "str | None" = None
     ) -> FileAttachment:
         """
         Uploads a file to the server and returns a FileAttachment.
@@ -591,14 +586,14 @@ class Bot(Router):
         if filename is None:
             if isinstance(data, str):
                 filename = os.path.basename(data)
-            elif hasattr(data, 'name'):
+            elif hasattr(data, "name"):
                 filename = data.name
             else:
                 raise exceptions.FilenameNotProvided(
                     "filename is required for use with "
                     f"object of type {type(data).__name__}"
                 )
-            
+
         raw_file = await self._upload(data, "file", filename)
         token = raw_file["token"]
         return FileAttachment(token=token)
