@@ -70,3 +70,9 @@ class MessageNotFoundException(NotFoundException):
     Child `NotFoundException` exception class that is raised
     in `Bot.get_message` function
     """
+
+
+class FilenameNotProvided(AiomaxException):
+    """
+    Filename not provided exception
+    """

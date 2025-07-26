@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from collections.abc import AsyncIterator
 from typing import IO, BinaryIO, Literal
 
@@ -514,21 +515,25 @@ class Bot(Router):
 
         return await response.json()
 
-    async def upload(self, data: "IO | str", type: str) -> dict:
+    async def _upload(
+        self,
+        data: "IO | str",
+        type: str,
+        field_name: str = "data"
+    ) -> dict:
         """
         Uploads a file to the server. Returns raw JSON with the token.
 
-        You probably should use one of the upload_* methods instead.
-
         :param data: File-like object or path to the file
         :param type: File type
+        :param field_name: Name of the form field sent to the API
         """
         if isinstance(data, str):
             async with aiofiles.open(data, "rb") as f:
                 data = await f.read()
 
         form = aiohttp.FormData()
-        form.add_field("data", data)
+        form.add_field(field_name, data)
 
         url_resp = await self.post(
             "https://botapi.max.ru/uploads", params={"type": type}
@@ -548,7 +553,7 @@ class Bot(Router):
 
         :param data: File-like object or path to the file
         """
-        raw_photo = await self.upload(data, "image")
+        raw_photo = await self._upload(data, "image")
         token = list(raw_photo["photos"].values())[0]["token"]
         return PhotoAttachment(token=token)
 
@@ -558,7 +563,7 @@ class Bot(Router):
 
         :param data: File-like object or path to the file
         """
-        raw_video = await self.upload(data, "video")
+        raw_video = await self._upload(data, "video")
         token = raw_video["token"]
         return VideoAttachment(token=token)
 
@@ -568,17 +573,33 @@ class Bot(Router):
 
         :param data: File-like object or path to the file
         """
-        raw_audio = await self.upload(data, "audio")
+        raw_audio = await self._upload(data, "audio")
         token = raw_audio["token"]
         return AudioAttachment(token=token)
 
-    async def upload_file(self, data: "IO | str") -> FileAttachment:
+    async def upload_file(
+        self,
+        data: "IO | str",
+        filename: "str | None" = None
+    ) -> FileAttachment:
         """
         Uploads a file to the server and returns a FileAttachment.
 
         :param data: File-like object or path to the file
+        :param filename: Filename that will be uploaded
         """
-        raw_file = await self.upload(data, "file")
+        if filename is None:
+            if isinstance(data, str):
+                filename = os.path.basename(data)
+            elif hasattr(data, 'name'):
+                filename = data.name
+            else:
+                raise exceptions.FilenameNotProvided(
+                    "filename is required for use with "
+                    f"object of type {type(data).__name__}"
+                )
+            
+        raw_file = await self._upload(data, "file", filename)
         token = raw_file["token"]
         return FileAttachment(token=token)
 
