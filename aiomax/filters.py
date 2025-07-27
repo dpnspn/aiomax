@@ -14,7 +14,7 @@ def normalize_filter(filter_):
     raise ValueError(f"Unsupported filter type: {type(filter_)}")
 
 
-class _filter:
+class BaseFilter:
     """
     Superclass of other filters for support of bit-wise or and bit-wise and
     """
@@ -26,7 +26,7 @@ class _filter:
         return _AndFilter(self, other)
 
 
-class _OrFilter(_filter):
+class _OrFilter(BaseFilter):
     """
     Class for using bit-wise or on filters
     """
@@ -39,7 +39,7 @@ class _OrFilter(_filter):
         return self.filter1(obj) or self.filter2(obj)
 
 
-class _AndFilter(_filter):
+class _AndFilter(BaseFilter):
     """
     Class for using bit-wise and on filters
     """
@@ -52,7 +52,7 @@ class _AndFilter(_filter):
         return self.filter1(obj) and self.filter2(obj)
 
 
-class equals(_filter):
+class equals(BaseFilter):
     def __init__(self, content: str):
         """
         :param content: Content to check
@@ -68,7 +68,7 @@ class equals(_filter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class has(_filter):
+class has(BaseFilter):
     def __init__(self, content: str):
         """
         :param content: Content to check
@@ -84,7 +84,7 @@ class has(_filter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class startswith(_filter):
+class startswith(BaseFilter):
     def __init__(self, prefix: str):
         """
         :param prefix: Prefix to check
@@ -100,7 +100,7 @@ class startswith(_filter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class endswith(_filter):
+class endswith(BaseFilter):
     def __init__(self, suffix: str):
         """
         :param suffix: Suffix to check
@@ -116,7 +116,7 @@ class endswith(_filter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class regex(_filter):
+class regex(BaseFilter):
     def __init__(self, pattern: str):
         """
         :param pattern: Regex pattern to check
@@ -147,7 +147,7 @@ def papaya(obj: any):
         raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class state(_filter):
+class state(BaseFilter):
     def __init__(self, state: any):
         """
         :param state: State to check
