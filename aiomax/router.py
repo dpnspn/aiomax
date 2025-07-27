@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Callable, Optional
+from typing import Callable
 
 from . import exceptions
 from .filters import normalize_filter
@@ -324,7 +324,7 @@ class Router:
     def on_command(
         self,
         name: "str | None" = None,
-        aliases: Optional[list[str]] = None,
+        aliases: "list[str] | None" = None,
         as_message: bool = False,
     ):
         """
