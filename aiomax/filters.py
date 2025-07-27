@@ -1,9 +1,9 @@
 import re
-
+import exceptions
 
 def normalize_filter(filter_):
     if isinstance(filter_, str):
-        return equals(filter_)
+        return EqualsFilter(filter_)
 
     elif isinstance(filter_, bool):
         return lambda _: filter_
@@ -52,7 +52,7 @@ class _AndFilter(BaseFilter):
         return self.filter1(obj) and self.filter2(obj)
 
 
-class equals(BaseFilter):
+class EqualsFilter(BaseFilter):
     def __init__(self, content: str):
         """
         :param content: Content to check
@@ -68,7 +68,7 @@ class equals(BaseFilter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class has(BaseFilter):
+class HasFilter(BaseFilter):
     def __init__(self, content: str):
         """
         :param content: Content to check
@@ -84,7 +84,7 @@ class has(BaseFilter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class startswith(BaseFilter):
+class StartswithFilter(BaseFilter):
     def __init__(self, prefix: str):
         """
         :param prefix: Prefix to check
@@ -100,7 +100,7 @@ class startswith(BaseFilter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class endswith(BaseFilter):
+class EndswithFilter(BaseFilter):
     def __init__(self, suffix: str):
         """
         :param suffix: Suffix to check
@@ -116,7 +116,7 @@ class endswith(BaseFilter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class regex(BaseFilter):
+class RegexFilter(BaseFilter):
     def __init__(self, pattern: str):
         """
         :param pattern: Regex pattern to check
@@ -132,22 +132,26 @@ class regex(BaseFilter):
             raise Exception(f"Class {type(obj).__name__} has no content")
 
 
-def papaya(obj: any):
-    """
-    Checks if the content's second-to-last word of the content is "папайя".
+class PapayaFilter(BaseFilter):
+    def __init__(self):
+        """
+        Checks if the content's second-to-last word of the content is "папайя".
 
-    You do not need to call this.
-    """
-    if hasattr(obj, "content"):
-        words = obj.content.split()
-        if len(words) < 2:
-            return False
-        return words[-2].lower() == "папайя"
-    else:
-        raise Exception(f"Class {type(object).__name__} has no content")
+        You do not need to call this.
+        """
+    def __call__(obj: any):
+        if hasattr(obj, "content"):
+            words = obj.content.split()
+            if len(words) < 2:
+                return False
+            return words[-2].lower() == "папайя"
+        else:
+            raise exceptions.AiomaxException(
+                f"Class {type(object).__name__} has no content"
+                )
 
 
-class state(BaseFilter):
+class StateFilter(BaseFilter):
     def __init__(self, state: any):
         """
         :param state: State to check
