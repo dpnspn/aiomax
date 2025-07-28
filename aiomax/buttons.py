@@ -196,11 +196,7 @@ class ChatButton(Button):
 
 
 class WebAppButton(Button):
-    def __init__(
-        self,
-        text: str,
-        bot: "str | int"
-    ):
+    def __init__(self, text: str, bot: "str | int"):
         """
         Open web app button
 
@@ -217,10 +213,7 @@ class WebAppButton(Button):
         return WebAppButton(data["text"], bot)
 
     def to_json(self) -> dict:
-        data = {
-            "type": "open_app",
-            "text": self.text
-        }
+        data = {"type": "open_app", "text": self.text}
         if isinstance(self.bot, int):
             data["contact_id"] = self.bot
         else:
@@ -229,10 +222,7 @@ class WebAppButton(Button):
 
 
 class SendTextButton(Button):
-    def __init__(
-        self,
-        text: str
-    ):
+    def __init__(self, text: str):
         """
         Send text to chat button
 
@@ -247,7 +237,6 @@ class SendTextButton(Button):
 
     def to_json(self) -> dict:
         return {"type": "message", "text": self.text}
-
 
 
 # builder
