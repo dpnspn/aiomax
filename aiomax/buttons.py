@@ -37,6 +37,10 @@ class Button:
             return ContactButton.from_json(data)
         elif data["type"] == "chat":
             return ChatButton.from_json(data)
+        elif data["type"] == "message":
+            return SendTextButton.from_json(data)
+        elif data["type"] == "open_app":
+            return WebAppButton.from_json(data)
         else:
             raise Exception(f"Unknown button type: {data['type']}")
 
@@ -53,6 +57,11 @@ class CallbackButton(Button):
     ):
         """
         Callback button
+
+        :param text: Button text
+        :param payload: Payload that will be sent to the bot when the button is
+            pressed
+        :param intent: Intent of the button (changes appearance on client)
         """
         super().__init__("callback", text)
         self.payload: str = payload
@@ -184,6 +193,61 @@ class ChatButton(Button):
             "start_payload": self.payload,
             "uuid": self.uuid,
         }
+
+
+class WebAppButton(Button):
+    def __init__(
+        self,
+        text: str,
+        bot: "str | int"
+    ):
+        """
+        Open web app button
+
+        :param text: Button text
+        :param bot: Bot ID, username or link of which to open
+            the web app
+        """
+        super().__init__("open_app", text)
+        self.bot: "str | int" = bot
+
+    @staticmethod
+    def from_json(data: dict) -> "WebAppButton":
+        bot = data.get("contact_id", data.get("web_app"))
+        return WebAppButton(data["text"], bot)
+
+    def to_json(self) -> dict:
+        data = {
+            "type": "open_app",
+            "text": self.text
+        }
+        if isinstance(self.bot, int):
+            data["contact_id"] = self.bot
+        else:
+            data["web_app"] = self.bot
+        return data
+
+
+class SendTextButton(Button):
+    def __init__(
+        self,
+        text: str
+    ):
+        """
+        Send text to chat button
+
+        :param text: Button text. Will be sent to the chat when a user
+            presses the button
+        """
+        super().__init__("message", text)
+
+    @staticmethod
+    def from_json(data: dict) -> "SendTextButton":
+        return SendTextButton(data["text"])
+
+    def to_json(self) -> dict:
+        return {"type": "message", "text": self.text}
+
 
 
 # builder
