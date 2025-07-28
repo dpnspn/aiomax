@@ -100,7 +100,7 @@ class StartswithFilter(BaseFilter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class EndswithFilter(BaseFilter):
+class EndsWithFilter(BaseFilter):
     def __init__(self, suffix: str):
         """
         :param suffix: Suffix to check
