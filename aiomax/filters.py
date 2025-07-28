@@ -84,7 +84,7 @@ class HasFilter(BaseFilter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class StartswithFilter(BaseFilter):
+class StartsWithFilter(BaseFilter):
     def __init__(self, prefix: str):
         """
         :param prefix: Prefix to check
@@ -136,9 +136,8 @@ class PapayaFilter(BaseFilter):
     def __init__(self):
         """
         Checks if the content's second-to-last word of the content is "папайя".
-
-        You do not need to call this.
         """
+    
     def __call__(obj: any):
         if hasattr(obj, "content"):
             words = obj.content.split()
