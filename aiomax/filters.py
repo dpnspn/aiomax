@@ -139,7 +139,7 @@ class PapayaFilter(BaseFilter):
         """
         Checks if the content's second-to-last word of the content is "папайя".
         """
-    
+
     def __call__(obj: any):
         if hasattr(obj, "content"):
             words = obj.content.split()
