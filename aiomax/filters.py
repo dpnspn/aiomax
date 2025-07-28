@@ -1,5 +1,7 @@
 import re
+
 import exceptions
+
 
 def normalize_filter(filter_):
     if isinstance(filter_, str):
@@ -147,7 +149,7 @@ class PapayaFilter(BaseFilter):
         else:
             raise exceptions.AiomaxException(
                 f"Class {type(object).__name__} has no content"
-                )
+            )
 
 
 class StateFilter(BaseFilter):
