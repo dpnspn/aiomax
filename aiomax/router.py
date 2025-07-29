@@ -361,7 +361,9 @@ class Router:
             )
             if check_name not in self._commands:
                 self._commands[check_name] = []
-            self._commands[check_name].append(CommandHandler(func, as_message, description))
+            self._commands[check_name].append(
+                CommandHandler(func, as_message, description)
+            )
 
             # aliases
             for i in aliases:

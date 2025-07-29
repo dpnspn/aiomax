@@ -45,7 +45,7 @@ class Bot(Router):
         case_sensitive: bool = True,
         default_format: "Literal['markdown', 'html'] | None" = None,
         max_messages_cached: int = 10000,
-        autosync_commands: bool = True
+        autosync_commands: bool = True,
     ):
         """
         Bot init
@@ -739,7 +739,7 @@ class Bot(Router):
         json = await response.json()
         if not json["success"]:
             raise Exception(json["message"])
-        
+
     async def sync_commands(self) -> list[BotCommand]:
         """
         Syncs all commands added via @on_command decorator
@@ -751,7 +751,7 @@ class Bot(Router):
 
         for k, v in self.commands.items():
             desc = [i.description for i in v if i.description]
-                
+
             if len(desc) == 0:
                 continue
 
