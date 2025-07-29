@@ -1,9 +1,11 @@
 import re
 
+import exceptions
+
 
 def normalize_filter(filter_):
     if isinstance(filter_, str):
-        return equals(filter_)
+        return EqualsFilter(filter_)
 
     elif isinstance(filter_, bool):
         return lambda _: filter_
@@ -14,7 +16,7 @@ def normalize_filter(filter_):
     raise ValueError(f"Unsupported filter type: {type(filter_)}")
 
 
-class _filter:
+class BaseFilter:
     """
     Superclass of other filters for support of bit-wise or and bit-wise and
     """
@@ -26,7 +28,7 @@ class _filter:
         return _AndFilter(self, other)
 
 
-class _OrFilter(_filter):
+class _OrFilter(BaseFilter):
     """
     Class for using bit-wise or on filters
     """
@@ -39,7 +41,7 @@ class _OrFilter(_filter):
         return self.filter1(obj) or self.filter2(obj)
 
 
-class _AndFilter(_filter):
+class _AndFilter(BaseFilter):
     """
     Class for using bit-wise and on filters
     """
@@ -52,7 +54,7 @@ class _AndFilter(_filter):
         return self.filter1(obj) and self.filter2(obj)
 
 
-class equals(_filter):
+class EqualsFilter(BaseFilter):
     def __init__(self, content: str):
         """
         :param content: Content to check
@@ -68,7 +70,7 @@ class equals(_filter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class has(_filter):
+class HasFilter(BaseFilter):
     def __init__(self, content: str):
         """
         :param content: Content to check
@@ -84,7 +86,7 @@ class has(_filter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class startswith(_filter):
+class StartsWithFilter(BaseFilter):
     def __init__(self, prefix: str):
         """
         :param prefix: Prefix to check
@@ -100,7 +102,7 @@ class startswith(_filter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class endswith(_filter):
+class EndsWithFilter(BaseFilter):
     def __init__(self, suffix: str):
         """
         :param suffix: Suffix to check
@@ -116,7 +118,7 @@ class endswith(_filter):
             raise Exception(f"Class {type(object).__name__} has no content")
 
 
-class regex(_filter):
+class RegexFilter(BaseFilter):
     def __init__(self, pattern: str):
         """
         :param pattern: Regex pattern to check
@@ -132,22 +134,25 @@ class regex(_filter):
             raise Exception(f"Class {type(obj).__name__} has no content")
 
 
-def papaya(obj: any):
-    """
-    Checks if the content's second-to-last word of the content is "папайя".
+class PapayaFilter(BaseFilter):
+    def __init__(self):
+        """
+        Checks if the content's second-to-last word of the content is "папайя".
+        """
 
-    You do not need to call this.
-    """
-    if hasattr(obj, "content"):
-        words = obj.content.split()
-        if len(words) < 2:
-            return False
-        return words[-2].lower() == "папайя"
-    else:
-        raise Exception(f"Class {type(object).__name__} has no content")
+    def __call__(obj: any):
+        if hasattr(obj, "content"):
+            words = obj.content.split()
+            if len(words) < 2:
+                return False
+            return words[-2].lower() == "папайя"
+        else:
+            raise exceptions.AiomaxException(
+                f"Class {type(object).__name__} has no content"
+            )
 
 
-class state(_filter):
+class StateFilter(BaseFilter):
     def __init__(self, state: any):
         """
         :param state: State to check
