@@ -45,6 +45,7 @@ class Bot(Router):
         case_sensitive: bool = True,
         default_format: "Literal['markdown', 'html'] | None" = None,
         max_messages_cached: int = 10000,
+        autosync_commands: bool = True
     ):
         """
         Bot init
@@ -58,12 +59,15 @@ class Bot(Router):
         :param default_format: Default message formatting mode
         :param max_messages_cached: Maximum number of messages to cache.
         Set to 0 to disable caching
+        :param autosync_commands: If True, autosyncs commands with
+            description specified on bot start
         """
         super().__init__(case_sensitive)
 
         self.access_token: str = access_token
         self.session = None
         self.polling = False
+        self.autosync_commands = autosync_commands
 
         self.command_prefixes: str | list[str] = command_prefixes
         self.mention_prefix: bool = mention_prefix
@@ -216,8 +220,8 @@ class Bot(Router):
         :param name: Bot display name
         :param description: Bot description
         :param commands: Commands supported by the bot. To remove all commands,
-        pass an empty list.
-        :param photo: Bot profile pictur
+            pass an empty list.
+        :param photo: Bot profile picture
         """
         if commands:
             commands = [i.as_dict() for i in commands]
@@ -234,16 +238,16 @@ class Bot(Router):
 
         response = await self.patch("https://botapi.max.ru/me", json=payload)
         data = await response.json()
+        user = User.from_json(data)
 
         # caching info
-        if name:
-            self.name = name
-        if commands:
-            self.bot_commands = commands
-        if description:
-            self.description = description
+        self.id = user.user_id
+        self.username = user.username
+        self.name = user.name
+        self.bot_commands = user.commands
+        self.description = user.description
 
-        return User.from_json(data)
+        return user
 
     async def get_chats(
         self, count_per_iter: int = 100
@@ -735,6 +739,29 @@ class Bot(Router):
         json = await response.json()
         if not json["success"]:
             raise Exception(json["message"])
+        
+    async def sync_commands(self) -> list[BotCommand]:
+        """
+        Syncs all commands added via @on_command decorator
+        that have a `description` specified.
+
+        Returns commands that have been synced.
+        """
+        commands = []
+
+        for k, v in self.commands.items():
+            desc = [i.description for i in v if i.description]
+                
+            if len(desc) == 0:
+                continue
+
+            desc = desc[0]
+            commands.append(BotCommand(k, desc))
+
+        if len(commands) > 0:
+            await self.patch_me(commands=commands)
+
+        return commands
 
     async def get_message(self, message_id: str) -> Message:
         """
@@ -1020,11 +1047,23 @@ class Bot(Router):
         async with session:
             self.session = session
 
-            # self info (this will cache the info automatically)
-            await self.get_me()
+            # autosyncing
+            synced = False
+
+            if self.autosync_commands:
+                try:
+                    # will cache bot data automatically
+                    await self.sync_commands()
+                    synced = True
+                except Exception as e:
+                    bot_logger.exception(e)
+
+            # will cache bot data automatically
+            if not synced:
+                await self.get_me()
 
             bot_logger.info(
-                f"Started polling with bot "
+                "Started polling with bot "
                 f"@{self.username} ({self.id}) - {self.name}"
             )
 

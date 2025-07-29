@@ -325,6 +325,7 @@ class Router:
         self,
         name: "str | None" = None,
         aliases: "list[str] | None" = None,
+        description: "str | None" = None,
         as_message: bool = False,
     ):
         """
@@ -332,6 +333,8 @@ class Router:
 
         :param name: Command name
         :param aliases: List of alternative names for this command
+        :param description: Command description that will be uploaded to
+            server when bot starts if autosync_commands in Bot is True
         :param as_message: Whether to trigger on_message decorator
             when this command is invoked
         """
@@ -358,7 +361,7 @@ class Router:
             )
             if check_name not in self._commands:
                 self._commands[check_name] = []
-            self._commands[check_name].append(CommandHandler(func, as_message))
+            self._commands[check_name].append(CommandHandler(func, as_message, description))
 
             # aliases
             for i in aliases:
