@@ -9,7 +9,7 @@ class FSMStorage:
         """
         return self.states.get(user_id)
 
-    def get_data(self, user_id: int, key: "any | None" = None) -> any | dict:
+    def get_data(self, user_id: int, key: "any | None" = None) -> "any | dict":
         """
         Gets user's data
         """
@@ -70,7 +70,7 @@ class FSMCursor:
         """
         return self.storage.get_state(self.user_id)
 
-    def get_data(self, key: "any | None" = None) -> any | dict:
+    def get_data(self, key: "any | None" = None) -> "any | dict":
         """
         Gets user's data
         """

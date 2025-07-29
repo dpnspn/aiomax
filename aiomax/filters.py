@@ -1,6 +1,6 @@
 import re
 
-import exceptions
+from . import exceptions
 
 
 def normalize_filter(filter_):
