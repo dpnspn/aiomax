@@ -44,8 +44,7 @@ class Bot(Router):
         mention_prefix: bool = True,
         case_sensitive: bool = True,
         default_format: "Literal['markdown', 'html'] | None" = None,
-        max_messages_cached: int = 10000,
-        autosync_commands: bool = True,
+        max_messages_cached: int = 10000
     ):
         """
         Bot init
@@ -59,15 +58,12 @@ class Bot(Router):
         :param default_format: Default message formatting mode
         :param max_messages_cached: Maximum number of messages to cache.
         Set to 0 to disable caching
-        :param autosync_commands: If True, autosyncs commands with
-            description specified on bot start
         """
         super().__init__(case_sensitive)
 
         self.access_token: str = access_token
         self.session = None
         self.polling = False
-        self.autosync_commands = autosync_commands
 
         self.command_prefixes: str | list[str] = command_prefixes
         self.mention_prefix: bool = mention_prefix
@@ -238,16 +234,16 @@ class Bot(Router):
 
         response = await self.patch("https://botapi.max.ru/me", json=payload)
         data = await response.json()
-        user = User.from_json(data)
+        bot = User.from_json(data)
 
         # caching info
-        self.id = user.user_id
-        self.username = user.username
-        self.name = user.name
-        self.bot_commands = user.commands
-        self.description = user.description
+        self.id = bot.user_id
+        self.username = bot.username
+        self.name = bot.name
+        self.bot_commands = bot.commands
+        self.description = bot.description
 
-        return user
+        return bot
 
     async def get_chats(
         self, count_per_iter: int = 100
@@ -750,13 +746,12 @@ class Bot(Router):
         commands = []
 
         for k, v in self.commands.items():
-            desc = [i.description for i in v if i.description]
-
-            if len(desc) == 0:
-                continue
-
-            desc = desc[0]
-            commands.append(BotCommand(k, desc))
+            for handler in v:
+                if handler.description:
+                    commands.append(BotCommand(
+                        k, handler.description
+                    ))
+                    break
 
         if len(commands) > 0:
             await self.patch_me(commands=commands)
@@ -1032,12 +1027,15 @@ class Bot(Router):
                 asyncio.create_task(self.call_update(i, payload))
 
     async def start_polling(
-        self, session: "aiohttp.ClientSession | None" = None
+        self, session: "aiohttp.ClientSession | None" = None,
+        sync_commands: bool = True
     ):
         """
         Starts polling.
 
         :param session: Custom aiohttp client session
+        :param sync_commands: Whether to sync commands with 
+            `sync_commands()` on polling start
         """
         self.polling = True
 
@@ -1048,18 +1046,15 @@ class Bot(Router):
             self.session = session
 
             # autosyncing
-            synced = False
-
-            if self.autosync_commands:
+            if sync_commands:
                 try:
                     # will cache bot data automatically
                     await self.sync_commands()
-                    synced = True
                 except Exception as e:
                     bot_logger.exception(e)
-
-            # will cache bot data automatically
-            if not synced:
+                    await self.get_me()
+            
+            else:
                 await self.get_me()
 
             bot_logger.info(
@@ -1088,8 +1083,8 @@ class Bot(Router):
         self.session = None
         self.polling = False
 
-    def run(self, *args, **kwargs):
+    def run(self, sync_commands: bool = True, *args, **kwargs):
         """
         Shortcut for `asyncio.run(Bot.start_polling())`
         """
-        asyncio.run(self.start_polling(*args, **kwargs))
+        asyncio.run(self.start_polling(sync_commands=sync_commands, *args, **kwargs))
