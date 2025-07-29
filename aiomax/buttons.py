@@ -38,7 +38,7 @@ class Button:
         elif data["type"] == "chat":
             return ChatButton.from_json(data)
         elif data["type"] == "message":
-            return SendTextButton.from_json(data)
+            return MessageButton.from_json(data)
         elif data["type"] == "open_app":
             return WebAppButton.from_json(data)
         else:
@@ -221,7 +221,7 @@ class WebAppButton(Button):
         return data
 
 
-class SendTextButton(Button):
+class MessageButton(Button):
     def __init__(self, text: str):
         """
         Send text to chat button
@@ -232,8 +232,8 @@ class SendTextButton(Button):
         super().__init__("message", text)
 
     @staticmethod
-    def from_json(data: dict) -> "SendTextButton":
-        return SendTextButton(data["text"])
+    def from_json(data: dict) -> "MessageButton":
+        return MessageButton(data["text"])
 
     def to_json(self) -> dict:
         return {"type": "message", "text": self.text}
