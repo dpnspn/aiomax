@@ -1095,5 +1095,5 @@ class Bot(Router):
         Shortcut for `asyncio.run(Bot.start_polling())`
         """
         asyncio.run(self.start_polling(
-            sync_commands=sync_commands, *args, **kwargs
+            *args, sync_commands=sync_commands, **kwargs
         ))
