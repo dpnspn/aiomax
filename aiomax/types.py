@@ -919,9 +919,11 @@ class CommandHandler:
         self,
         call: Callable,
         as_message: bool = False,
+        description: "str | None" = None,
     ):
         self.call = call
         self.as_message: bool = as_message
+        self.description: "str | None" = description
 
 
 class Handler:

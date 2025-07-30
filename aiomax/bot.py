@@ -216,8 +216,8 @@ class Bot(Router):
         :param name: Bot display name
         :param description: Bot description
         :param commands: Commands supported by the bot. To remove all commands,
-        pass an empty list.
-        :param photo: Bot profile pictur
+            pass an empty list.
+        :param photo: Bot profile picture
         """
         if commands:
             commands = [i.as_dict() for i in commands]
@@ -234,16 +234,16 @@ class Bot(Router):
 
         response = await self.patch("https://botapi.max.ru/me", json=payload)
         data = await response.json()
+        bot = User.from_json(data)
 
         # caching info
-        if name:
-            self.name = name
-        if commands:
-            self.bot_commands = commands
-        if description:
-            self.description = description
+        self.id = bot.user_id
+        self.username = bot.username
+        self.name = bot.name
+        self.bot_commands = bot.commands
+        self.description = bot.description
 
-        return User.from_json(data)
+        return bot
 
     async def get_chats(
         self, count_per_iter: int = 100
@@ -736,6 +736,26 @@ class Bot(Router):
         if not json["success"]:
             raise Exception(json["message"])
 
+    async def sync_commands(self) -> list[BotCommand]:
+        """
+        Syncs all commands added via @on_command decorator
+        that have a `description` specified.
+
+        Returns commands that have been synced.
+        """
+        commands = []
+
+        for k, v in self.commands.items():
+            for handler in v:
+                if handler.description:
+                    commands.append(BotCommand(k, handler.description))
+                    break
+
+        if len(commands) > 0:
+            await self.patch_me(commands=commands)
+
+        return commands
+
     async def get_message(self, message_id: str) -> Message:
         """
         Allows you to fetch message's info.
@@ -1005,12 +1025,16 @@ class Bot(Router):
                 asyncio.create_task(self.call_update(i, payload))
 
     async def start_polling(
-        self, session: "aiohttp.ClientSession | None" = None
+        self,
+        session: "aiohttp.ClientSession | None" = None,
+        sync_commands: bool = True,
     ):
         """
         Starts polling.
 
         :param session: Custom aiohttp client session
+        :param sync_commands: Whether to sync commands with
+            `sync_commands()` on polling start
         """
         self.polling = True
 
@@ -1020,11 +1044,20 @@ class Bot(Router):
         async with session:
             self.session = session
 
-            # self info (this will cache the info automatically)
-            await self.get_me()
+            # autosyncing
+            if sync_commands:
+                try:
+                    # will cache bot data automatically
+                    await self.sync_commands()
+                except Exception as e:
+                    bot_logger.error(e)
+                    await self.get_me()
+
+            else:
+                await self.get_me()
 
             bot_logger.info(
-                f"Started polling with bot "
+                "Started polling with bot "
                 f"@{self.username} ({self.id}) - {self.name}"
             )
 
@@ -1049,8 +1082,10 @@ class Bot(Router):
         self.session = None
         self.polling = False
 
-    def run(self, *args, **kwargs):
+    def run(self, sync_commands: bool = True, *args, **kwargs):
         """
         Shortcut for `asyncio.run(Bot.start_polling())`
         """
-        asyncio.run(self.start_polling(*args, **kwargs))
+        asyncio.run(
+            self.start_polling(*args, sync_commands=sync_commands, **kwargs)
+        )
