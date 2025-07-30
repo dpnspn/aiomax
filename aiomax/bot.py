@@ -1048,7 +1048,10 @@ class Bot(Router):
             if sync_commands:
                 try:
                     # will cache bot data automatically
-                    await self.sync_commands()
+                    commands = await self.sync_commands()
+                    if len(commands) == 0:
+                        await self.get_me()
+                        
                 except Exception as e:
                     bot_logger.error(e)
                     await self.get_me()
