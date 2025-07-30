@@ -45,7 +45,8 @@ class User:
         self.commands: "list[BotCommand] | None" = (
             [BotCommand(**i) for i in commands] if commands else None
         )
-        self.last_access_time: "int | None" = last_access_time
+        self.last_access_time: "int | None" = last_access_time / 1000 \
+            if last_access_time else None
         self.is_owner: "bool | None" = is_owner
         self.is_admin: "bool | None" = is_admin
         self.join_time: "int | None" = join_time
