@@ -1042,7 +1042,9 @@ class Chat:
         self.chat_id: int = chat_id
         self.type: str = type
         self.status: str = status
-        self.last_event_time: int = last_event_time
+        self.last_event_time: int = (
+            last_event_time / 1000 if last_event_time else None
+        )
         self.participants_count: int = participants_count
         self.title: "str | None" = title
         self.icon: "Image | None" = icon
@@ -1091,7 +1093,7 @@ class Callback:
         payload: "str | None" = None,
     ):
         self.bot = bot
-        self.timestamp: int = timestamp
+        self.timestamp: int = timestamp/1000
         self.callback_id: str = callback_id
         self.message: "Message | None" = message
         self.user: User = user
@@ -1283,7 +1285,7 @@ class ChatCreatePayload:
         :param message_id: Message ID on which the button was
         :param start_payload: Start payload specified by the button
         """
-        self.timestamp: int = timestamp
+        self.timestamp: int = timestamp/1000
         self.chat: Chat = chat
         self.message_id: "str | None" = message_id
         self.start_payload: "str | None" = start_payload
@@ -1321,7 +1323,7 @@ class MessageDeletePayload:
         :param chat_id: ID of the chat the message was deleted in
         :param user_id: ID of the user who deleted the message
         """
-        self.timestamp: int = timestamp
+        self.timestamp: int = timestamp/1000
         self.message: "Message | None" = message
         self.message_id: "str | None" = message_id
         self.chat_id: "int | None" = chat_id
@@ -1366,7 +1368,7 @@ class ChatTitleEditPayload:
         :param chat_id: Chat ID that had its title edited.
         :param title: New chat title
         """
-        self.timestamp: int = timestamp
+        self.timestamp: int = timestamp/1000
         self.user: User = user
         self.chat_id: "int | None" = chat_id
         self.title: "str | None" = title
@@ -1406,7 +1408,7 @@ class ChatMembershipPayload:
         :param is_channel: Whether the bot got added to / kicked
         from a channel or not
         """
-        self.timestamp: int = timestamp
+        self.timestamp: int = timestamp/1000
         self.user: User = user
         self.chat_id: "int | None" = chat_id
         self.is_channel: bool = is_channel
@@ -1449,7 +1451,7 @@ class UserMembershipPayload:
         :param initiator: User ID of the inviter / kicker,
         if the user got invited by another user or kicked by an admin.
         """
-        self.timestamp: int = timestamp
+        self.timestamp: int = timestamp/1000
         self.user: User = user
         self.chat_id: "int | None" = chat_id
         self.is_channel: bool = is_channel
