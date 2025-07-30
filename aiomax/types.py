@@ -52,9 +52,7 @@ class User:
         )
         self.is_owner: "bool | None" = is_owner
         self.is_admin: "bool | None" = is_admin
-        self.join_time: "int | None" = (
-            join_time / 1000 if join_time else None
-        )
+        self.join_time: "int | None" = join_time / 1000 if join_time else None
         self.permissions: "list[str] | None" = permissions
 
     def __repr__(self):
