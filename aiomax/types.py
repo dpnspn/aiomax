@@ -578,8 +578,9 @@ class Message:
     ):
         self.recipient: MessageRecipient = recipient
         self.body: "MessageBody | None" = body
-        self.timestamp: "float | None" = timestamp / 1000 \
-            if timestamp else None
+        self.timestamp: "float | None" = (
+            timestamp / 1000 if timestamp else None
+        )
         self.sender: "User | None" = sender
         self.link: "LinkedMessage | None" = link
         self.views: "int | None" = views
