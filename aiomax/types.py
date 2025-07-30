@@ -38,7 +38,9 @@ class User:
         self.name: str = name
         self.username: "str | None" = username
         self.is_bot: bool = is_bot
-        self.last_activity_time: int = last_activity_time
+        self.last_activity_time: int = (
+            last_activity_time / 1000 if last_activity_time else None
+        )
         self.description: "str | None" = description
         self.avatar_url: "str | None" = avatar_url
         self.full_avatar_url: "str | None" = full_avatar_url
@@ -50,7 +52,9 @@ class User:
         )
         self.is_owner: "bool | None" = is_owner
         self.is_admin: "bool | None" = is_admin
-        self.join_time: "int | None" = join_time
+        self.join_time: "int | None" = (
+            join_time / 1000 if join_time else None
+        )
         self.permissions: "list[str] | None" = permissions
 
     def __repr__(self):
