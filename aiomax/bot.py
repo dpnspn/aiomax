@@ -1051,13 +1051,6 @@ class Bot(Router):
                     await self.sync_commands()
                 except Exception as e:
                     bot_logger.error(e)
-
-                    # handling error
-                    ctx = ExceptionContext(e, None)
-
-                    for i in self.handlers["on_exception"]:
-                        asyncio.create_task(i.call(ctx))
-
                     await self.get_me()
 
             else:
