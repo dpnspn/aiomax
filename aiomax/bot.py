@@ -1051,7 +1051,7 @@ class Bot(Router):
                     # will cache bot data automatically
                     await self.sync_commands()
                 except Exception as e:
-                    bot_logger.exception(e)
+                    bot_logger.error(e)
 
                     # handling error
                     ctx = ExceptionContext(e, None)
