@@ -44,7 +44,7 @@ class Bot(Router):
         mention_prefix: bool = True,
         case_sensitive: bool = True,
         default_format: "Literal['markdown', 'html'] | None" = None,
-        max_messages_cached: int = 10000
+        max_messages_cached: int = 10000,
     ):
         """
         Bot init
@@ -748,9 +748,7 @@ class Bot(Router):
         for k, v in self.commands.items():
             for handler in v:
                 if handler.description:
-                    commands.append(BotCommand(
-                        k, handler.description
-                    ))
+                    commands.append(BotCommand(k, handler.description))
                     break
 
         if len(commands) > 0:
@@ -1027,14 +1025,15 @@ class Bot(Router):
                 asyncio.create_task(self.call_update(i, payload))
 
     async def start_polling(
-        self, session: "aiohttp.ClientSession | None" = None,
-        sync_commands: bool = True
+        self,
+        session: "aiohttp.ClientSession | None" = None,
+        sync_commands: bool = True,
     ):
         """
         Starts polling.
 
         :param session: Custom aiohttp client session
-        :param sync_commands: Whether to sync commands with 
+        :param sync_commands: Whether to sync commands with
             `sync_commands()` on polling start
         """
         self.polling = True
@@ -1060,7 +1059,7 @@ class Bot(Router):
                         asyncio.create_task(i.call(ctx))
 
                     await self.get_me()
-            
+
             else:
                 await self.get_me()
 
@@ -1094,6 +1093,6 @@ class Bot(Router):
         """
         Shortcut for `asyncio.run(Bot.start_polling())`
         """
-        asyncio.run(self.start_polling(
-            *args, sync_commands=sync_commands, **kwargs
-        ))
+        asyncio.run(
+            self.start_polling(*args, sync_commands=sync_commands, **kwargs)
+        )
