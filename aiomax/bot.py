@@ -1051,7 +1051,7 @@ class Bot(Router):
                     commands = await self.sync_commands()
                     if len(commands) == 0:
                         await self.get_me()
-                        
+
                 except Exception as e:
                     bot_logger.error(e)
                     await self.get_me()
