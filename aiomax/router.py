@@ -2,10 +2,9 @@ import logging
 from copy import deepcopy
 from typing import Callable
 
-from . import exceptions
+from . import exceptions, utils
 from .filters import normalize_filter
 from .types import CommandHandler, Handler, MessageHandler
-from . import utils
 
 bot_logger = logging.getLogger("aiomax.bot")
 
@@ -48,17 +47,14 @@ class Router:
             "message_callback": [],
         }
 
-
     @staticmethod
-    async def check_filters(
-        filters: "list[Callable] | Callable",
-        obj: any):
+    async def check_filters(filters: "list[Callable] | Callable", obj: any):
         """
-        Calls filter(s) and returns 
+        Calls filter(s) and returns
         """
         if not isinstance(filters, list):
             filters = [filters]
-        
+
         for filter in filters:
             if utils.is_async(filter):
                 result = await filter(obj)
@@ -67,7 +63,6 @@ class Router:
             if not result:
                 return False
         return True
-    
 
     @staticmethod
     def wrap_filters(
@@ -91,12 +86,16 @@ class Router:
             return lambda message: True
 
         if mode == "and":
+
             async def combined_filter(message):
                 return await Router.check_filters(normalized_filters, message)
         elif mode == "or":
+
             async def combined_filter(message):
-                return any(await Router.check_filters(f, message) for f in
-                           normalized_filters)
+                return any(
+                    await Router.check_filters(f, message)
+                    for f in normalized_filters
+                )
         else:
             raise ValueError(f"Unsupported mode: {mode}. Use 'and' or 'or'.")
 

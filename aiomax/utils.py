@@ -77,6 +77,7 @@ def context_kwargs(func: Callable, **kwargs):
 
     return kwargs
 
+
 def is_async(func: Callable) -> bool:
     if inspect.iscoroutinefunction(func):
         return True

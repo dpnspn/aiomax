@@ -883,7 +883,7 @@ class Bot(Router):
             for handler in self.handlers["message_created"]:
                 if not handler.detect_commands and block:
                     continue
-                
+
                 x = await Router.check_filters(handler.filters, message)
 
                 if x:
