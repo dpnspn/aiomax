@@ -5,6 +5,7 @@ from typing import Callable
 from . import exceptions
 from .filters import normalize_filter
 from .types import CommandHandler, Handler, MessageHandler
+from . import utils
 
 bot_logger = logging.getLogger("aiomax.bot")
 
@@ -47,6 +48,27 @@ class Router:
             "message_callback": [],
         }
 
+
+    @staticmethod
+    async def check_filters(
+        filters: "list[Callable] | Callable",
+        obj: any):
+        """
+        Calls filter(s) and returns 
+        """
+        if not isinstance(filters, list):
+            filters = [filters]
+        
+        for filter in filters:
+            if utils.is_async(filter):
+                result = await filter(obj)
+            else:
+                result = filter(obj)
+            if not result:
+                return False
+        return True
+    
+
     @staticmethod
     def wrap_filters(
         filters: tuple["Callable | str | None", ...], mode: str = "and"
@@ -69,13 +91,12 @@ class Router:
             return lambda message: True
 
         if mode == "and":
-
-            def combined_filter(message):
-                return all(f(message) for f in normalized_filters)
+            async def combined_filter(message):
+                return await Router.check_filters(normalized_filters, message)
         elif mode == "or":
-
-            def combined_filter(message):
-                return any(f(message) for f in normalized_filters)
+            async def combined_filter(message):
+                return any(await Router.check_filters(f, message) for f in
+                           normalized_filters)
         else:
             raise ValueError(f"Unsupported mode: {mode}. Use 'and' or 'or'.")
 
