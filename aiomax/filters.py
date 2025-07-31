@@ -27,7 +27,7 @@ class BaseFilter:
 
     def __and__(self, other):
         return _AndFilter(self, other)
-    
+
     def __neg__(self):
         return _NotFilter(self)
 
@@ -50,25 +50,27 @@ class _AndFilter(BaseFilter):
         """
         Class for using bit-wise and on filters
         """
-        
+
         self.filter1 = normalize_filter(filter1)
         self.filter2 = normalize_filter(filter2)
 
     def __call__(self, obj: any):
         return self.filter1(obj) and self.filter2(obj)
 
+
 class _NotFilter(BaseFilter):
     def __init__(self, filter):
         """
         :param filter: filter to turn over
-        
+
         Filter for using "not" in callables
         """
-         
+
         self.filter = normalize_filter(filter)
-    
+
     def __call__(self, obj: any):
         return not self.filter(obj)
+
 
 class EqualsFilter(BaseFilter):
     def __init__(self, content: str):
