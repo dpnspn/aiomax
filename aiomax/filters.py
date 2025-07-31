@@ -19,7 +19,7 @@ def normalize_filter(filter_):
 class BaseFilter:
     """
     Superclass of other filters for support of
-    bit-wise or, minus and bit-wise and
+    bitwise or, minus and bitwise and
     """
 
     def __or__(self, other):
@@ -35,7 +35,7 @@ class BaseFilter:
 class _OrFilter(BaseFilter):
     def __init__(self, filter1, filter2):
         """
-        Class for using bit-wise or on filters
+        Class for using bitwise or on filters
         """
 
         self.filter1 = normalize_filter(filter1)
@@ -48,7 +48,7 @@ class _OrFilter(BaseFilter):
 class _AndFilter(BaseFilter):
     def __init__(self, filter1, filter2):
         """
-        Class for using bit-wise and on filters
+        Class for using bitwise and on filters
         """
 
         self.filter1 = normalize_filter(filter1)
@@ -61,7 +61,7 @@ class _AndFilter(BaseFilter):
 class _NotFilter(BaseFilter):
     def __init__(self, filter):
         """
-        :param filter: filter to turn over
+        :param filter: filter to negate
 
         Filter for using "not" in callables
         """

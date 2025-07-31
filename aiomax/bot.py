@@ -884,9 +884,7 @@ class Bot(Router):
                 if not handler.detect_commands and block:
                     continue
 
-                x = await Router.check_filters(handler.filters, message)
-
-                if x:
+                if await Router.check_filters(handler.filters, message):
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
                     asyncio.create_task(
                         self.call_update(handler, message, **kwargs)
