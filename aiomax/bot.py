@@ -914,9 +914,7 @@ class Bot(Router):
                 update["timestamp"], message, old_message, self
             )
             for handler in self.handlers[update_type]:
-                filters = [filter(message) for filter in handler.filters]
-
-                if all(filters):
+                if await Router.check_filters(handler.filters, message):
                     kwargs = utils.context_kwargs(
                         handler.call,
                         cursor=cursor,
@@ -938,9 +936,7 @@ class Bot(Router):
 
             # handling
             for handler in self.handlers[update_type]:
-                filters = [filter(payload) for filter in handler.filters]
-
-                if all(filters):
+                if await Router.check_filters(handler.filters, payload):
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
                     asyncio.create_task(
                         self.call_update(handler, payload, **kwargs)
@@ -1001,9 +997,7 @@ class Bot(Router):
             cursor = fsm.FSMCursor(self.storage, callback.user.user_id)
 
             for handler in self.handlers[update_type]:
-                filters = [filter(callback) for filter in handler.filters]
-
-                if all(filters):
+                if await Router.check_filters(handler.filters, callback):
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
                     asyncio.create_task(
                         self.call_update(handler, callback, **kwargs)
