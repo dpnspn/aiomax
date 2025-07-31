@@ -18,7 +18,8 @@ def normalize_filter(filter_):
 
 class BaseFilter:
     """
-    Superclass of other filters for support of bit-wise or and bit-wise and
+    Superclass of other filters for support of
+    bit-wise or, minus and bit-wise and
     """
 
     def __or__(self, other):
@@ -26,14 +27,17 @@ class BaseFilter:
 
     def __and__(self, other):
         return _AndFilter(self, other)
+    
+    def __neg__(self):
+        return _NotFilter(self)
 
 
 class _OrFilter(BaseFilter):
-    """
-    Class for using bit-wise or on filters
-    """
-
     def __init__(self, filter1, filter2):
+        """
+        Class for using bit-wise or on filters
+        """
+
         self.filter1 = normalize_filter(filter1)
         self.filter2 = normalize_filter(filter2)
 
@@ -42,17 +46,29 @@ class _OrFilter(BaseFilter):
 
 
 class _AndFilter(BaseFilter):
-    """
-    Class for using bit-wise and on filters
-    """
-
     def __init__(self, filter1, filter2):
+        """
+        Class for using bit-wise and on filters
+        """
+        
         self.filter1 = normalize_filter(filter1)
         self.filter2 = normalize_filter(filter2)
 
     def __call__(self, obj: any):
         return self.filter1(obj) and self.filter2(obj)
 
+class _NotFilter(BaseFilter):
+    def __init__(self, filter):
+        """
+        :param filter: filter to turn over
+        
+        Filter for using "not" in callables
+        """
+         
+        self.filter = normalize_filter(filter)
+    
+    def __call__(self, obj: any):
+        return not self.filter(obj)
 
 class EqualsFilter(BaseFilter):
     def __init__(self, content: str):
@@ -140,7 +156,7 @@ class PapayaFilter(BaseFilter):
         Checks if the content's second-to-last word of the content is "папайя".
         """
 
-    def __call__(obj: any):
+    def __call__(self, obj: any):
         if hasattr(obj, "content"):
             words = obj.content.split()
             if len(words) < 2:
