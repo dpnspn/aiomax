@@ -1,4 +1,4 @@
-from inspect import signature
+import inspect
 from typing import Callable, Literal
 
 import aiohttp
@@ -71,11 +71,19 @@ def context_kwargs(func: Callable, **kwargs):
     """
     Returns only those kwargs, that callable accepts
     """
-    params = list(signature(func).parameters.keys())
+    params = list(inspect.signature(func).parameters.keys())
 
     kwargs = {kw: arg for kw, arg in kwargs.items() if kw in params}
 
     return kwargs
+
+
+def is_async(func: Callable) -> bool:
+    if inspect.iscoroutinefunction(func):
+        return True
+    if callable(func):
+        return inspect.iscoroutinefunction(func.__call__)
+    return False
 
 
 async def get_exception(response: aiohttp.ClientResponse):
