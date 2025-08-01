@@ -48,7 +48,7 @@ class _OrFilter(BaseFilter):
 class _AndFilter(BaseFilter):
     def __init__(self, filter1, filter2):
         """
-        Class for using bitwise and on filters
+        Class for using bitwise AND on filters
         """
 
         self.filter1 = normalize_filter(filter1)
