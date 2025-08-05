@@ -858,14 +858,12 @@ class Bot(Router):
 
                 for handler in handlers:
                     ctx = CommandContext(self, message, name, args)
-                    if not await Router.check_filters(handler.filters,
-                                                    ctx):
+                    if not await Router.check_filters(handler.filters, ctx):
                         bot_logger.debug(f'Command "{name}" not handled')
                         continue
-                    
+
                     handled = True
-                    kwargs = utils.context_kwargs(handler.call,
-                                                    cursor=cursor)
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
                     asyncio.create_task(
                         self.call_update(
                             handler,

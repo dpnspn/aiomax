@@ -924,7 +924,7 @@ class CommandHandler:
     ):
         if filters is None:
             filters = []
-        
+
         self.filters = filters
         self.call = call
         self.as_message: bool = as_message
