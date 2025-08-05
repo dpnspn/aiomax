@@ -918,9 +918,14 @@ class CommandHandler:
     def __init__(
         self,
         call: Callable,
+        filters: "list | None" = None,
         as_message: bool = False,
         description: "str | None" = None,
     ):
+        if filters is None:
+            filters = []
+        
+        self.filters = filters
         self.call = call
         self.as_message: bool = as_message
         self.description: "str | None" = description

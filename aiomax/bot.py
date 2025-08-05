@@ -853,31 +853,36 @@ class Bot(Router):
                 name = command.split()[0]
                 check_name = name if self.case_sensitive else name.lower()
                 args = " ".join(command.split()[1:])
+                handlers = self.commands.get(check_name, [])
+                handled = False
 
-                if check_name not in self.commands:
-                    bot_logger.debug(f'Command "{name}" not handled')
-                    continue
-
-                if len(self.commands[check_name]) == 0:
-                    bot_logger.debug(f'Command "{name}" not handled')
-                    continue
-
-                for i in self.commands[check_name]:
-                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                for handler in handlers:
+                    ctx = CommandContext(self, message, name, args)
+                    if not await Router.check_filters(handler.filters,
+                                                    ctx):
+                        bot_logger.debug(f'Command "{name}" not handled')
+                        continue
+                    
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call,
+                                                    cursor=cursor)
                     asyncio.create_task(
                         self.call_update(
-                            i,
-                            CommandContext(self, message, name, args),
+                            handler,
+                            ctx,
                             **kwargs,
                         )
                     )
 
-                    if not i.as_message:
+                    if not handler.as_message:
                         block = True
 
-                bot_logger.debug(f'Command "{name}" handled')
+                if handled:
+                    bot_logger.debug(f'Command "{name}" handled')
+                else:
+                    bot_logger.debug(f'Command "{name}" not handled')
 
-            # handling
+            # handling as message
             handled = False
 
             for handler in self.handlers["message_created"]:

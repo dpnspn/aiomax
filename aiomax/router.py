@@ -344,6 +344,8 @@ class Router:
     def on_command(
         self,
         name: "str | None" = None,
+        *filters,
+        mode: str = "and",
         aliases: "list[str] | None" = None,
         description: "str | None" = None,
         as_message: bool = False,
@@ -363,6 +365,7 @@ class Router:
             aliases = []
 
         def decorator(func):
+            new_filter = self.wrap_filters(filters, mode=mode)
             # command name
             if name is None:
                 command_name = func.__name__
@@ -382,7 +385,7 @@ class Router:
             if check_name not in self._commands:
                 self._commands[check_name] = []
             self._commands[check_name].append(
-                CommandHandler(func, as_message, description)
+                CommandHandler(func, new_filter, as_message, description)
             )
 
             # aliases
