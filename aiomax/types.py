@@ -912,6 +912,10 @@ class CommandContext:
     @property
     def user_id(self):
         return self.sender.user_id
+    
+    @property
+    def content(self):
+        return self.args_raw
 
 
 class CommandHandler:

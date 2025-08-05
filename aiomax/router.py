@@ -156,7 +156,7 @@ class Router:
 
     def on_message(
         self,
-        *filters: "Callable | str | None",
+        *filters: "Callable | str | bool | None",
         mode: str = "and",
         detect_commands: bool = False,
     ):
@@ -180,7 +180,7 @@ class Router:
         return decorator
 
     def on_message_edit(
-        self, *filters: "Callable | str | None", mode: str = "and"
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
     ):
         """
         Decorator for editing messages.
@@ -201,7 +201,7 @@ class Router:
         return decorator
 
     def on_message_delete(
-        self, *filters: "Callable | str | None", mode: str = "and"
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
     ):
         """
         Decorator for deleted messages.
@@ -310,7 +310,7 @@ class Router:
         return decorator
 
     def on_button_callback(
-        self, *filters: "Callable | str | None", mode: str = "and"
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
     ):
         """
         Decorator for receiving button presses.
@@ -344,7 +344,7 @@ class Router:
     def on_command(
         self,
         name: "str | None" = None,
-        *filters,
+        *filters: "Callable | str | bool | None",
         mode: str = "and",
         aliases: "list[str] | None" = None,
         description: "str | None" = None,
