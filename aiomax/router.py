@@ -52,7 +52,7 @@ class Router:
         """
         Calls filter(s) and returns
         """
-        if not isinstance(filters, list):
+        if not isinstance(filters, (list, tuple, set)):
             filters = [filters]
 
         for filter in filters:
@@ -221,13 +221,14 @@ class Router:
 
         return decorator
 
-    def on_bot_start(self):
+    def on_bot_start(self, *filters: "Callable | str | bool | None"):
         """
         Decorator for handling bot start.
         """
 
         def decorator(func):
-            self._handlers["bot_started"].append(Handler(call=func))
+            self._handlers["bot_started"].append(Handler(func,
+                router_filters=filters))
             return func
 
         return decorator

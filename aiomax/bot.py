@@ -951,12 +951,21 @@ class Bot(Router):
         if update_type == "bot_started":
             payload = BotStartPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
+            handled = False
 
-            bot_logger.debug(f'User "{payload.user!r}" started bot')
-
-            for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+            for handler in self.handlers[update_type]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(handler, payload,
+                                                         **kwargs))
+            
+            if handled:
+                bot_logger.debug(f'Starting bot by "{payload.user!r}" handled')
+            else:
+                bot_logger.debug(
+                    f'Starting bot by "{payload.user!r}" not handled'
+                    )
 
         if update_type == "chat_title_changed":
             payload = ChatTitleEditPayload.from_json(update, self)
