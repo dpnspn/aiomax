@@ -1,12 +1,9 @@
-import logging
 from copy import deepcopy
 from typing import Callable
 
 from . import exceptions, utils
 from .filters import normalize_filter
 from .types import CommandHandler, Handler, MessageHandler
-
-bot_logger = logging.getLogger("aiomax.bot")
 
 
 class Router:

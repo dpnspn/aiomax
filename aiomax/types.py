@@ -54,7 +54,7 @@ class User:
     def __repr__(self):
         return (
             f"{type(self).__name__}(user_id={self.user_id!r},"
-            "name={self.name!r})"
+            f"name={self.name!r})"
         )
 
     def __eq__(self, other):
