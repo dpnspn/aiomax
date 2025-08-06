@@ -874,10 +874,12 @@ class Bot(Router):
                     if not handler.as_message:
                         block = True
 
-                bot_logger.debug('Command "%s" %s by bot id=%d',
-                                 name,
-                                 "handled" if handled else "not handled",
-                                 self.id)
+                bot_logger.debug(
+                    'Command "%s" %s by bot id=%d',
+                    name,
+                    "handled" if handled else "not handled",
+                    self.id,
+                )
 
             # handling as message
             handled = False
@@ -893,10 +895,12 @@ class Bot(Router):
                     )
                     handled = True
 
-            bot_logger.debug('Message "%s" %s by bot id=%d',
-                                 message.content,
-                                 "handled" if handled else "not handled",
-                                 self.id)
+            bot_logger.debug(
+                'Message "%s" %s by bot id=%d',
+                message.content,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "message_edited":
             message = Message.from_json(update["message"])
@@ -927,10 +931,12 @@ class Bot(Router):
                     )
 
             # handle logs
-            bot_logger.debug('Message edit "%s" %s by bot id=%d',
-                                 payload.content,
-                                 "handled" if handled else "not handled",
-                                 self.id)
+            bot_logger.debug(
+                'Message edit "%s" %s by bot id=%d',
+                payload.content,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "message_removed":
             payload = MessageDeletePayload.from_json(update, self)
@@ -950,13 +956,18 @@ class Bot(Router):
                         self.call_update(handler, payload, **kwargs)
                     )
 
-            log_content = f'"{payload.content}"' if payload.content else \
-                payload.message_id
+            log_content = (
+                f'"{payload.content}"'
+                if payload.content
+                else payload.message_id
+            )
 
-            bot_logger.debug('Message delete %s %s by bot id=%d',
-                                log_content,
-                                 "handled" if handled else "not handled",
-                                 self.id)
+            bot_logger.debug(
+                "Message delete %s %s by bot id=%d",
+                log_content,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "bot_started":
             payload = BotStartPayload.from_json(update, self)
@@ -967,33 +978,35 @@ class Bot(Router):
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(handler, payload,
-                                                         **kwargs))
-            
-            bot_logger.debug('Starting bot id=%d by "%s" %s',
-                                 self.id,
-                                  payload.user,
-                                 "handled" if handled else "not handled")
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
+
+            bot_logger.debug(
+                'Starting bot id=%d by "%s" %s',
+                self.id,
+                payload.user,
+                "handled" if handled else "not handled",
+            )
 
         if update_type == "chat_title_changed":
             payload = ChatTitleEditPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
             handled = False
 
-            
-
             for i in self.handlers[update_type]:
                 handled = True
                 kwargs = utils.context_kwargs(i.call, cursor=cursor)
                 asyncio.create_task(self.call_update(i, payload, **kwargs))
-            
+
             bot_logger.debug(
                 'Chat id=%d title edit to "%s" by "%s" %s by bot id=%d',
-                                payload.chat_id,
-                                payload.title,
-                                 payload.user,
-                                 "handled" if handled else "not handled",
-                                 self.id)
+                payload.chat_id,
+                payload.title,
+                payload.user,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "bot_added":
             payload = ChatMembershipPayload.from_json(update, self)
@@ -1004,13 +1017,15 @@ class Bot(Router):
                 handled = True
                 kwargs = utils.context_kwargs(i.call, cursor=cursor)
                 asyncio.create_task(self.call_update(i, payload, **kwargs))
-            
-            bot_logger.debug('Bot id=%d add to %s id=%d %s',
-                                 self.id,
-                                 "channel" if payload.is_channel else "chat",
-                                payload.chat_id,
-                                 "handled" if handled else "not handled")
-        
+
+            bot_logger.debug(
+                "Bot id=%d add to %s id=%d %s",
+                self.id,
+                "channel" if payload.is_channel else "chat",
+                payload.chat_id,
+                "handled" if handled else "not handled",
+            )
+
         if update_type == "bot_removed":
             payload = ChatMembershipPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
@@ -1020,12 +1035,14 @@ class Bot(Router):
                 handled = True
                 kwargs = utils.context_kwargs(i.call, cursor=cursor)
                 asyncio.create_task(self.call_update(i, payload, **kwargs))
-            
-            bot_logger.debug('Bot id=%d remove from %s id=%d %s',
-                                 self.id,
-                                 "channel" if payload.is_channel else "chat",
-                                payload.chat_id,
-                                 "handled" if handled else "not handled")
+
+            bot_logger.debug(
+                "Bot id=%d remove from %s id=%d %s",
+                self.id,
+                "channel" if payload.is_channel else "chat",
+                payload.chat_id,
+                "handled" if handled else "not handled",
+            )
 
         if update_type == "user_added":
             payload = UserMembershipPayload.from_json(update, self)
@@ -1036,14 +1053,16 @@ class Bot(Router):
                 handled = True
                 kwargs = utils.context_kwargs(i.call, cursor=cursor)
                 asyncio.create_task(self.call_update(i, payload, **kwargs))
-            
-            bot_logger.debug('User "%s" add to %s id=%d %s by bot id=%d',
-                                payload.user,
-                                 "channel" if payload.is_channel else "chat",
-                                payload.chat_id,
-                                 "handled" if handled else "not handled",
-                                 self.id)
-        
+
+            bot_logger.debug(
+                'User "%s" add to %s id=%d %s by bot id=%d',
+                payload.user,
+                "channel" if payload.is_channel else "chat",
+                payload.chat_id,
+                "handled" if handled else "not handled",
+                self.id,
+            )
+
         if update_type == "user_removed":
             payload = UserMembershipPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
@@ -1053,13 +1072,15 @@ class Bot(Router):
                 handled = True
                 kwargs = utils.context_kwargs(i.call, cursor=cursor)
                 asyncio.create_task(self.call_update(i, payload, **kwargs))
-            
-            bot_logger.debug('User "%s" remove from %s id=%d %s by bot id=%d',
-                                payload.user,
-                                 "channel" if payload.is_channel else "chat",
-                                payload.chat_id,
-                                 "handled" if handled else "not handled",
-                                 self.id)
+
+            bot_logger.debug(
+                'User "%s" remove from %s id=%d %s by bot id=%d',
+                payload.user,
+                "channel" if payload.is_channel else "chat",
+                payload.chat_id,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "message_callback":
             handled = False
@@ -1086,10 +1107,12 @@ class Bot(Router):
             else:
                 bot_logger.debug(f'Callback "{callback.payload}" not handled')
 
-            bot_logger.debug('Callback "%s" %s by bot id=%d',
-                                callback.payload,
-                                "handled" if handled else "not handled",
-                                 self.id)
+            bot_logger.debug(
+                'Callback "%s" %s by bot id=%d',
+                callback.payload,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "message_chat_created":
             payload = ChatCreatePayload.from_json(update)
@@ -1098,13 +1121,14 @@ class Bot(Router):
             for i in self.handlers[update_type]:
                 handled = True
                 asyncio.create_task(self.call_update(i, payload))
-            
+
             bot_logger.debug(
                 'Chat create "%s" from message id=%s %s by bot id=%d',
                 payload.chat,
                 payload.message_id,
-                                "handled" if handled else "not handled",
-                                 self.id)
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
     async def start_polling(
         self,

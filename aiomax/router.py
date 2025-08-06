@@ -224,8 +224,9 @@ class Router:
         """
 
         def decorator(func):
-            self._handlers["bot_started"].append(Handler(func,
-                router_filters=filters))
+            self._handlers["bot_started"].append(
+                Handler(func, router_filters=filters)
+            )
             return func
 
         return decorator
