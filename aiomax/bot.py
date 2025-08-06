@@ -1000,7 +1000,7 @@ class Bot(Router):
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
                     asyncio.create_task(
                         self.call_update(handler, payload, **kwargs)
-                        )
+                    )
 
             bot_logger.debug(
                 'Chat id=%d title edit to "%s" by "%s" %s by bot id=%d',
