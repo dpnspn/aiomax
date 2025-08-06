@@ -917,6 +917,7 @@ class CommandContext:
     def content(self):
         return self.args_raw
 
+
 class Handler:
     def __init__(
         self,
@@ -949,6 +950,7 @@ class MessageHandler(Handler):
         super().__init__(call, deco_filter, router_filters)
         self.detect_commands: bool = detect_commands
 
+
 class CommandHandler(Handler):
     def __init__(
         self,
@@ -958,11 +960,11 @@ class CommandHandler(Handler):
         as_message: bool = False,
         description: "str | None" = None,
     ):
-
         super().__init__(call, deco_filter, router_filters)
         self.call = call
         self.as_message: bool = as_message
         self.description: "str | None" = description
+
 
 class Image:
     def __init__(
