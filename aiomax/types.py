@@ -917,24 +917,6 @@ class CommandContext:
     def content(self):
         return self.args_raw
 
-
-class CommandHandler:
-    def __init__(
-        self,
-        call: Callable,
-        filters: "list | None" = None,
-        as_message: bool = False,
-        description: "str | None" = None,
-    ):
-        if filters is None:
-            filters = []
-
-        self.filters = filters
-        self.call = call
-        self.as_message: bool = as_message
-        self.description: "str | None" = description
-
-
 class Handler:
     def __init__(
         self,
@@ -964,12 +946,23 @@ class MessageHandler(Handler):
         router_filters: "list[Callable] | None" = None,
         detect_commands: bool = False,
     ):
-        if router_filters is None:
-            router_filters = []
-
         super().__init__(call, deco_filter, router_filters)
         self.detect_commands: bool = detect_commands
 
+class CommandHandler(Handler):
+    def __init__(
+        self,
+        call: Callable,
+        deco_filter: "Callable | None" = None,
+        router_filters: "list[Callable] | None" = None,
+        as_message: bool = False,
+        description: "str | None" = None,
+    ):
+
+        super().__init__(call, deco_filter, router_filters)
+        self.call = call
+        self.as_message: bool = as_message
+        self.description: "str | None" = description
 
 class Image:
     def __init__(

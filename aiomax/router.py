@@ -42,6 +42,8 @@ class Router:
             "message_edited": [],
             "message_removed": [],
             "message_callback": [],
+            "bot_started": [],
+            "command": []
         }
 
     @staticmethod
@@ -218,14 +220,17 @@ class Router:
 
         return decorator
 
-    def on_bot_start(self, *filters: "Callable | str | bool | None"):
+    def on_bot_start(self, *filters: "Callable | str | bool | None", mode):
         """
         Decorator for handling bot start.
         """
 
         def decorator(func):
+            new_filter = self.wrap_filters(filters, mode=mode)
             self._handlers["bot_started"].append(
-                Handler(func, router_filters=filters)
+                Handler(func,
+                        deco_filter=new_filter,
+                        router_filters=self.filters["bot_started"])
             )
             return func
 
@@ -384,7 +389,12 @@ class Router:
             if check_name not in self._commands:
                 self._commands[check_name] = []
             self._commands[check_name].append(
-                CommandHandler(func, new_filter, as_message, description)
+                CommandHandler(func,
+                               new_filter,
+                               self.filters["command"],
+                               as_message,
+                               description
+                               )
             )
 
             # aliases
@@ -398,7 +408,10 @@ class Router:
                 if check_name not in self._commands:
                     self._commands[check_name] = []
                 self._commands[check_name].append(
-                    CommandHandler(func, as_message)
+                    CommandHandler(func,
+                                   new_filter,
+                                   self.filters["command"],
+                                   as_message)
                 )
             return func
 
@@ -417,3 +430,10 @@ class Router:
 
     def add_button_callback_filter(self, filter: "Callable"):
         self.filters["message_callback"].append(filter)
+    
+    def add_bot_start_filter(self, filter: "Callable"):
+        self.filters["bot_started"].append(filter)
+    
+    def add_command_filter(self, filter: "Callable"):
+        self.filters["command"].append(filter)
+
