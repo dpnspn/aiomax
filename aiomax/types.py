@@ -1499,6 +1499,10 @@ class ChatTitleEditPayload:
     @property
     def user_id(self):
         return self.user.user_id
+    
+    @property
+    def content(self):
+        return self.title
 
     async def send(
         self,

@@ -220,7 +220,8 @@ class Router:
 
         return decorator
 
-    def on_bot_start(self, *filters: "Callable | str | bool | None", mode):
+    def on_bot_start(self, *filters: "Callable | str | bool | None",
+                     mode: str = 'and'):
         """
         Decorator for handling bot start.
         """
@@ -238,13 +239,19 @@ class Router:
 
         return decorator
 
-    def on_chat_title_change(self):
+    def on_chat_title_change(self, *filters: "Callable | str | bool | None",
+                             mode: str = 'and'):
         """
         Decorator for handling chat title changes.
         """
 
         def decorator(func):
-            self._handlers["chat_title_changed"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["chat_title_changed"].append(
+                Handler(call=func,
+                        deco_filter=new_filter,
+                        router_filters=self.filters["chat_title_changed"])
+                )
             return func
 
         return decorator

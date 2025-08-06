@@ -994,10 +994,13 @@ class Bot(Router):
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
             handled = False
 
-            for i in self.handlers[update_type]:
-                handled = True
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+            for handler in self.handlers[update_type]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                        )
 
             bot_logger.debug(
                 'Chat id=%d title edit to "%s" by "%s" %s by bot id=%d',
