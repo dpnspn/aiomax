@@ -986,7 +986,7 @@ class Bot(Router):
                     )
 
             bot_logger.debug(
-                'Starting bot id=%d by "%s" %s',
+                'Bot start id=%d by "%s" %s',
                 self.id,
                 payload.user,
                 "handled" if handled else "not handled",
