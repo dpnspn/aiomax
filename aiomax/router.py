@@ -50,7 +50,7 @@ class Router:
             "user_added": [],
             "user_removed": [],
             "on_exception": [],
-            "message_chat_created": []
+            "message_chat_created": [],
         }
 
     @staticmethod
@@ -510,24 +510,24 @@ class Router:
 
     def add_command_filter(self, filter: "Callable"):
         self.filters["command"].append(filter)
-    
+
     def add_chat_title_change_filter(self, filter: "Callable"):
         self.filters["chat_title_changed"].append(filter)
-    
+
     def add_bot_add_filter(self, filter: "Callable"):
         self.filters["bot_added"].append(filter)
-    
-    def add_bot_remove_filter(self, filter: "Callable"):        
+
+    def add_bot_remove_filter(self, filter: "Callable"):
         self.filters["bot_removed"].append(filter)
-    
+
     def add_user_add_filter(self, filter: "Callable"):
         self.filters["user_added"].append(filter)
-    
+
     def add_user_remove_filter(self, filter: "Callable"):
         self.filters["user_removed"].append(filter)
-    
+
     def add_exception_filter(self, filter: "Callable"):
         self.filters["exception"].append(filter)
-    
+
     def add_button_chat_create_filter(self, filter: "Callable"):
         self.filters["message_chat_created"].append(filter)
