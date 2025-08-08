@@ -1,12 +1,9 @@
-import logging
 from copy import deepcopy
 from typing import Callable
 
 from . import exceptions, utils
 from .filters import normalize_filter
 from .types import CommandHandler, Handler, MessageHandler
-
-bot_logger = logging.getLogger("aiomax.bot")
 
 
 class Router:
@@ -45,6 +42,15 @@ class Router:
             "message_edited": [],
             "message_removed": [],
             "message_callback": [],
+            "bot_started": [],
+            "command": [],
+            "chat_title_changed": [],
+            "bot_added": [],
+            "bot_removed": [],
+            "user_added": [],
+            "user_removed": [],
+            "on_exception": [],
+            "message_chat_created": [],
         }
 
     @staticmethod
@@ -52,7 +58,7 @@ class Router:
         """
         Calls filter(s) and returns
         """
-        if not isinstance(filters, list):
+        if not isinstance(filters, (list, tuple, set)):
             filters = [filters]
 
         for filter in filters:
@@ -156,7 +162,7 @@ class Router:
 
     def on_message(
         self,
-        *filters: "Callable | str | None",
+        *filters: "Callable | str | bool | None",
         mode: str = "and",
         detect_commands: bool = False,
     ):
@@ -180,7 +186,7 @@ class Router:
         return decorator
 
     def on_message_edit(
-        self, *filters: "Callable | str | None", mode: str = "and"
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
     ):
         """
         Decorator for editing messages.
@@ -201,7 +207,7 @@ class Router:
         return decorator
 
     def on_message_delete(
-        self, *filters: "Callable | str | None", mode: str = "and"
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
     ):
         """
         Decorator for deleted messages.
@@ -221,79 +227,142 @@ class Router:
 
         return decorator
 
-    def on_bot_start(self):
+    def on_bot_start(
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
+    ):
         """
         Decorator for handling bot start.
         """
 
         def decorator(func):
-            self._handlers["bot_started"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["bot_started"].append(
+                Handler(
+                    func,
+                    deco_filter=new_filter,
+                    router_filters=self.filters["bot_started"],
+                )
+            )
             return func
 
         return decorator
 
-    def on_chat_title_change(self):
+    def on_chat_title_change(
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
+    ):
         """
         Decorator for handling chat title changes.
         """
 
         def decorator(func):
-            self._handlers["chat_title_changed"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["chat_title_changed"].append(
+                Handler(
+                    call=func,
+                    deco_filter=new_filter,
+                    router_filters=self.filters["chat_title_changed"],
+                )
+            )
             return func
 
         return decorator
 
-    def on_bot_add(self):
+    def on_bot_add(
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
+    ):
         """
         Decorator for handling bot invitations in groups.
         """
 
         def decorator(func):
-            self._handlers["bot_added"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["bot_added"].append(
+                Handler(
+                    call=func,
+                    deco_filter=new_filter,
+                    router_filters=self.filters["bot_added"],
+                )
+            )
             return func
 
         return decorator
 
-    def on_bot_remove(self):
+    def on_bot_remove(
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
+    ):
         """
         Decorator for handling bot kicks from groups.
         """
 
         def decorator(func):
-            self._handlers["bot_removed"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["bot_removed"].append(
+                Handler(
+                    call=func,
+                    deco_filter=new_filter,
+                    router_filters=self.filters["bot_removed"],
+                )
+            )
             return func
 
         return decorator
 
-    def on_user_add(self):
+    def on_user_add(
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
+    ):
         """
         Decorator for handling user joins.
         """
 
         def decorator(func):
-            self._handlers["user_added"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["user_added"].append(
+                Handler(
+                    call=func,
+                    deco_filter=new_filter,
+                    router_filters=self.filters["user_added"],
+                )
+            )
             return func
 
         return decorator
 
-    def on_user_remove(self):
+    def on_user_remove(
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
+    ):
         """
         Decorator for handling user leaves.
         """
 
         def decorator(func):
-            self._handlers["user_removed"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["user_removed"].append(
+                Handler(
+                    call=func,
+                    deco_filter=new_filter,
+                    router_filters=self.filters["user_removed"],
+                )
+            )
             return func
 
         return decorator
 
-    def on_exception(self):
+    def on_exception(
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
+    ):
         """
         Decorator for handling errors in handlers.
         """
 
         def decorator(func):
-            self._handlers["on_exception"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["on_exception"].append(
+                Handler(
+                    call=func,
+                    deco_filter=new_filter,
+                    router_filters=self.filters["on_exception"],
+                )
+            )
             return func
 
         return decorator
@@ -310,7 +379,7 @@ class Router:
         return decorator
 
     def on_button_callback(
-        self, *filters: "Callable | str | None", mode: str = "and"
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
     ):
         """
         Decorator for receiving button presses.
@@ -330,13 +399,22 @@ class Router:
 
         return decorator
 
-    def on_button_chat_create(self):
+    def on_button_chat_create(
+        self, *filters: "Callable | str | bool | None", mode: str = "and"
+    ):
         """
         Decorator for receiving chat button presses.
         """
 
         def decorator(func):
-            self._handlers["message_chat_created"].append(Handler(call=func))
+            new_filter = self.wrap_filters(filters, mode=mode)
+            self._handlers["message_chat_created"].append(
+                Handler(
+                    call=func,
+                    deco_filter=new_filter,
+                    router_filters=self.filters["message_chat_created"],
+                )
+            )
             return func
 
         return decorator
@@ -344,6 +422,8 @@ class Router:
     def on_command(
         self,
         name: "str | None" = None,
+        *filters: "Callable | str | bool | None",
+        mode: str = "and",
         aliases: "list[str] | None" = None,
         description: "str | None" = None,
         as_message: bool = False,
@@ -363,6 +443,7 @@ class Router:
             aliases = []
 
         def decorator(func):
+            new_filter = self.wrap_filters(filters, mode=mode)
             # command name
             if name is None:
                 command_name = func.__name__
@@ -382,7 +463,13 @@ class Router:
             if check_name not in self._commands:
                 self._commands[check_name] = []
             self._commands[check_name].append(
-                CommandHandler(func, as_message, description)
+                CommandHandler(
+                    func,
+                    new_filter,
+                    self.filters["command"],
+                    as_message,
+                    description,
+                )
             )
 
             # aliases
@@ -396,7 +483,9 @@ class Router:
                 if check_name not in self._commands:
                     self._commands[check_name] = []
                 self._commands[check_name].append(
-                    CommandHandler(func, as_message)
+                    CommandHandler(
+                        func, new_filter, self.filters["command"], as_message
+                    )
                 )
             return func
 
@@ -415,3 +504,30 @@ class Router:
 
     def add_button_callback_filter(self, filter: "Callable"):
         self.filters["message_callback"].append(filter)
+
+    def add_bot_start_filter(self, filter: "Callable"):
+        self.filters["bot_started"].append(filter)
+
+    def add_command_filter(self, filter: "Callable"):
+        self.filters["command"].append(filter)
+
+    def add_chat_title_change_filter(self, filter: "Callable"):
+        self.filters["chat_title_changed"].append(filter)
+
+    def add_bot_add_filter(self, filter: "Callable"):
+        self.filters["bot_added"].append(filter)
+
+    def add_bot_remove_filter(self, filter: "Callable"):
+        self.filters["bot_removed"].append(filter)
+
+    def add_user_add_filter(self, filter: "Callable"):
+        self.filters["user_added"].append(filter)
+
+    def add_user_remove_filter(self, filter: "Callable"):
+        self.filters["user_removed"].append(filter)
+
+    def add_exception_filter(self, filter: "Callable"):
+        self.filters["exception"].append(filter)
+
+    def add_button_chat_create_filter(self, filter: "Callable"):
+        self.filters["message_chat_created"].append(filter)
