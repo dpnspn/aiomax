@@ -1017,11 +1017,11 @@ class Bot(Router):
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
             handled = False
 
-            for i in self.handlers["bot_added"]:
+            for handler in self.handlers["bot_added"]:
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
-                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(i, payload, **kwargs))
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(handler, payload, **kwargs))
 
             bot_logger.debug(
                 "Bot id=%d add to %s id=%d %s",
@@ -1036,11 +1036,11 @@ class Bot(Router):
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
             handled = False
 
-            for i in self.handlers["bot_removed"]:
+            for handler in self.handlers["bot_removed"]:
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
-                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(i, payload, **kwargs))
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(handler, payload, **kwargs))
 
             bot_logger.debug(
                 "Bot id=%d remove from %s id=%d %s",
@@ -1055,11 +1055,11 @@ class Bot(Router):
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
             handled = False
 
-            for i in self.handlers["user_added"]:
+            for handler in self.handlers["user_added"]:
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
-                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(i, payload, **kwargs))
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(handler, payload, **kwargs))
 
             bot_logger.debug(
                 'User "%s" add to %s id=%d %s by bot id=%d',
@@ -1075,11 +1075,11 @@ class Bot(Router):
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
             handled = False
 
-            for i in self.handlers["user_removed"]:
+            for handler in self.handlers["user_removed"]:
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
-                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(i, payload, **kwargs))
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(handler, payload, **kwargs))
 
             bot_logger.debug(
                 'User "%s" remove from %s id=%d %s by bot id=%d',
@@ -1126,10 +1126,10 @@ class Bot(Router):
             payload = ChatCreatePayload.from_json(update)
             handled = False
 
-            for i in self.handlers[update_type]:
+            for handler in self.handlers[update_type]:
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
-                    asyncio.create_task(self.call_update(i, payload))
+                    asyncio.create_task(self.call_update(handler, payload))
 
             bot_logger.debug(
                 'Chat create "%s" from message id=%s %s by bot id=%d',
