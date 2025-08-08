@@ -797,7 +797,6 @@ class Bot(Router):
 
         # handling error
         except Exception as e:
-
             # handling error
             ctx = ExceptionContext(e, args[0] if len(args) > 0 else None)
 
@@ -806,7 +805,7 @@ class Bot(Router):
                 if await Router.check_filters(handler.filters, ctx):
                     handled = True
                     asyncio.create_task(handler.call(ctx))
-            
+
             if not handled:
                 raise e
 
@@ -1023,7 +1022,9 @@ class Bot(Router):
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(handler, payload, **kwargs))
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
             bot_logger.debug(
                 "Bot id=%d add to %s id=%d %s",
@@ -1042,7 +1043,9 @@ class Bot(Router):
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(handler, payload, **kwargs))
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
             bot_logger.debug(
                 "Bot id=%d remove from %s id=%d %s",
@@ -1061,7 +1064,9 @@ class Bot(Router):
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(handler, payload, **kwargs))
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
             bot_logger.debug(
                 'User "%s" add to %s id=%d %s by bot id=%d',
@@ -1081,7 +1086,9 @@ class Bot(Router):
                 if await Router.check_filters(handler.filters, payload):
                     handled = True
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
-                    asyncio.create_task(self.call_update(handler, payload, **kwargs))
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
             bot_logger.debug(
                 'User "%s" remove from %s id=%d %s by bot id=%d',
