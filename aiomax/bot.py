@@ -805,7 +805,8 @@ class Bot(Router):
             ctx = ExceptionContext(e, args[0] if len(args) > 0 else None)
 
             for i in self.handlers["on_exception"]:
-                asyncio.create_task(i.call(ctx))
+                if await Router.check_filters(handler.filters, ctx):
+                    asyncio.create_task(i.call(ctx))
 
     async def handle_update(self, update: dict):
         """
@@ -1000,7 +1001,7 @@ class Bot(Router):
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
                     asyncio.create_task(
                         self.call_update(handler, payload, **kwargs)
-                        )
+                    )
 
             bot_logger.debug(
                 'Chat id=%d title edit to "%s" by "%s" %s by bot id=%d',
@@ -1017,9 +1018,10 @@ class Bot(Router):
             handled = False
 
             for i in self.handlers["bot_added"]:
-                handled = True
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(i, payload, **kwargs))
 
             bot_logger.debug(
                 "Bot id=%d add to %s id=%d %s",
@@ -1035,9 +1037,10 @@ class Bot(Router):
             handled = False
 
             for i in self.handlers["bot_removed"]:
-                handled = True
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(i, payload, **kwargs))
 
             bot_logger.debug(
                 "Bot id=%d remove from %s id=%d %s",
@@ -1053,9 +1056,10 @@ class Bot(Router):
             handled = False
 
             for i in self.handlers["user_added"]:
-                handled = True
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(i, payload, **kwargs))
 
             bot_logger.debug(
                 'User "%s" add to %s id=%d %s by bot id=%d',
@@ -1072,9 +1076,10 @@ class Bot(Router):
             handled = False
 
             for i in self.handlers["user_removed"]:
-                handled = True
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                    asyncio.create_task(self.call_update(i, payload, **kwargs))
 
             bot_logger.debug(
                 'User "%s" remove from %s id=%d %s by bot id=%d',
@@ -1122,8 +1127,9 @@ class Bot(Router):
             handled = False
 
             for i in self.handlers[update_type]:
-                handled = True
-                asyncio.create_task(self.call_update(i, payload))
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    asyncio.create_task(self.call_update(i, payload))
 
             bot_logger.debug(
                 'Chat create "%s" from message id=%s %s by bot id=%d',
