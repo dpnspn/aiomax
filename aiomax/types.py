@@ -1734,6 +1734,11 @@ class ExceptionContext:
             self.reply = self.obj.reply
         else:
             self.reply = self.send
+        
+        if hasattr(obj, "user_id"):
+            self.user_id = obj.user_id
+        else:
+            self.user_id = None
 
     async def send(
         self,

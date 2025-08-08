@@ -797,16 +797,18 @@ class Bot(Router):
 
         # handling error
         except Exception as e:
-            # if there's no handlers throw the error
-            if len(self.handlers["on_exception"]) == 0:
-                raise e
 
             # handling error
             ctx = ExceptionContext(e, args[0] if len(args) > 0 else None)
 
-            for i in self.handlers["on_exception"]:
+            handled = False
+            for handler in self.handlers["on_exception"]:
                 if await Router.check_filters(handler.filters, ctx):
-                    asyncio.create_task(i.call(ctx))
+                    handled = True
+                    asyncio.create_task(handler.call(ctx))
+            
+            if not handled:
+                raise e
 
     async def handle_update(self, update: dict):
         """
