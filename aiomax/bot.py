@@ -797,15 +797,17 @@ class Bot(Router):
 
         # handling error
         except Exception as e:
-            # if there's no handlers throw the error
-            if len(self.handlers["on_exception"]) == 0:
-                raise e
-
             # handling error
             ctx = ExceptionContext(e, args[0] if len(args) > 0 else None)
 
-            for i in self.handlers["on_exception"]:
-                asyncio.create_task(i.call(ctx))
+            handled = False
+            for handler in self.handlers["on_exception"]:
+                if await Router.check_filters(handler.filters, ctx):
+                    handled = True
+                    asyncio.create_task(handler.call(ctx))
+
+            if not handled:
+                raise e
 
     async def handle_update(self, update: dict):
         """
@@ -853,31 +855,35 @@ class Bot(Router):
                 name = command.split()[0]
                 check_name = name if self.case_sensitive else name.lower()
                 args = " ".join(command.split()[1:])
+                handlers = self.commands.get(check_name, [])
+                handled = False
 
-                if check_name not in self.commands:
-                    bot_logger.debug(f'Command "{name}" not handled')
-                    continue
+                for handler in handlers:
+                    ctx = CommandContext(self, message, name, args)
+                    if not await Router.check_filters(handler.filters, ctx):
+                        continue
 
-                if len(self.commands[check_name]) == 0:
-                    bot_logger.debug(f'Command "{name}" not handled')
-                    continue
-
-                for i in self.commands[check_name]:
-                    kwargs = utils.context_kwargs(i.call, cursor=cursor)
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
                     asyncio.create_task(
                         self.call_update(
-                            i,
-                            CommandContext(self, message, name, args),
+                            handler,
+                            ctx,
                             **kwargs,
                         )
                     )
 
-                    if not i.as_message:
+                    if not handler.as_message:
                         block = True
 
-                bot_logger.debug(f'Command "{name}" handled')
+                bot_logger.debug(
+                    'Command "%s" %s by bot id=%d',
+                    name,
+                    "handled" if handled else "not handled",
+                    self.id,
+                )
 
-            # handling
+            # handling as message
             handled = False
 
             for handler in self.handlers["message_created"]:
@@ -891,17 +897,19 @@ class Bot(Router):
                     )
                     handled = True
 
-            # handle logs
-            if handled:
-                bot_logger.debug(f'Message "{message.body.text}" handled')
-            else:
-                bot_logger.debug(f'Message "{message.body.text}" not handled')
+            bot_logger.debug(
+                'Message "%s" %s by bot id=%d',
+                message.content,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "message_edited":
             message = Message.from_json(update["message"])
             message.bot = self
             message.user_locale = update.get("user_locale")
             cursor = fsm.FSMCursor(self.storage, message.sender.user_id)
+            handled = False
 
             # caching
             old_message = None
@@ -915,6 +923,7 @@ class Bot(Router):
             )
             for handler in self.handlers[update_type]:
                 if await Router.check_filters(handler.filters, message):
+                    handled = True
                     kwargs = utils.context_kwargs(
                         handler.call,
                         cursor=cursor,
@@ -924,10 +933,16 @@ class Bot(Router):
                     )
 
             # handle logs
-            bot_logger.debug(f'Message "{message.body.text}" edited')
+            bot_logger.debug(
+                'Message edit "%s" %s by bot id=%d',
+                payload.content,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "message_removed":
             payload = MessageDeletePayload.from_json(update, self)
+            handled = False
 
             if payload.user_id:
                 cursor = fsm.FSMCursor(self.storage, payload.user_id)
@@ -937,52 +952,152 @@ class Bot(Router):
             # handling
             for handler in self.handlers[update_type]:
                 if await Router.check_filters(handler.filters, payload):
+                    handled = True
                     kwargs = utils.context_kwargs(handler.call, cursor=cursor)
                     asyncio.create_task(
                         self.call_update(handler, payload, **kwargs)
                     )
 
-            # handle logs
-            bot_logger.debug(f'Message "{payload.content}" deleted')
+            log_content = (
+                f'"{payload.content}"'
+                if payload.content
+                else payload.message_id
+            )
+
+            bot_logger.debug(
+                "Message delete %s %s by bot id=%d",
+                log_content,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "bot_started":
             payload = BotStartPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
+            handled = False
 
-            bot_logger.debug(f'User "{payload.user!r}" started bot')
+            for handler in self.handlers[update_type]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
-            for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+            bot_logger.debug(
+                'Bot start id=%d by "%s" %s',
+                self.id,
+                payload.user,
+                "handled" if handled else "not handled",
+            )
 
         if update_type == "chat_title_changed":
             payload = ChatTitleEditPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
+            handled = False
+
+            for handler in self.handlers[update_type]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
             bot_logger.debug(
-                f'User "{payload.user!r} '
-                f"changed title of chat {payload.chat_id}"
+                'Chat id=%d title edit to "%s" by "%s" %s by bot id=%d',
+                payload.chat_id,
+                payload.title,
+                payload.user,
+                "handled" if handled else "not handled",
+                self.id,
             )
 
-            for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
-
-        if update_type == "bot_added" or update_type == "bot_removed":
+        if update_type == "bot_added":
             payload = ChatMembershipPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
+            handled = False
 
-            for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+            for handler in self.handlers["bot_added"]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
 
-        if update_type == "user_added" or update_type == "user_removed":
+            bot_logger.debug(
+                "Bot id=%d add to %s id=%d %s",
+                self.id,
+                "channel" if payload.is_channel else "chat",
+                payload.chat_id,
+                "handled" if handled else "not handled",
+            )
+
+        if update_type == "bot_removed":
+            payload = ChatMembershipPayload.from_json(update, self)
+            cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
+            handled = False
+
+            for handler in self.handlers["bot_removed"]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
+
+            bot_logger.debug(
+                "Bot id=%d remove from %s id=%d %s",
+                self.id,
+                "channel" if payload.is_channel else "chat",
+                payload.chat_id,
+                "handled" if handled else "not handled",
+            )
+
+        if update_type == "user_added":
             payload = UserMembershipPayload.from_json(update, self)
             cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
+            handled = False
 
-            for i in self.handlers[update_type]:
-                kwargs = utils.context_kwargs(i.call, cursor=cursor)
-                asyncio.create_task(self.call_update(i, payload, **kwargs))
+            for handler in self.handlers["user_added"]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
+
+            bot_logger.debug(
+                'User "%s" add to %s id=%d %s by bot id=%d',
+                payload.user,
+                "channel" if payload.is_channel else "chat",
+                payload.chat_id,
+                "handled" if handled else "not handled",
+                self.id,
+            )
+
+        if update_type == "user_removed":
+            payload = UserMembershipPayload.from_json(update, self)
+            cursor = fsm.FSMCursor(self.storage, payload.user.user_id)
+            handled = False
+
+            for handler in self.handlers["user_removed"]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    kwargs = utils.context_kwargs(handler.call, cursor=cursor)
+                    asyncio.create_task(
+                        self.call_update(handler, payload, **kwargs)
+                    )
+
+            bot_logger.debug(
+                'User "%s" remove from %s id=%d %s by bot id=%d',
+                payload.user,
+                "channel" if payload.is_channel else "chat",
+                payload.chat_id,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
         if update_type == "message_callback":
             handled = False
@@ -1009,12 +1124,29 @@ class Bot(Router):
             else:
                 bot_logger.debug(f'Callback "{callback.payload}" not handled')
 
+            bot_logger.debug(
+                'Callback "%s" %s by bot id=%d',
+                callback.payload,
+                "handled" if handled else "not handled",
+                self.id,
+            )
+
         if update_type == "message_chat_created":
             payload = ChatCreatePayload.from_json(update)
-            bot_logger.debug(f'Created chat "{payload.start_payload}"')
+            handled = False
 
-            for i in self.handlers[update_type]:
-                asyncio.create_task(self.call_update(i, payload))
+            for handler in self.handlers[update_type]:
+                if await Router.check_filters(handler.filters, payload):
+                    handled = True
+                    asyncio.create_task(self.call_update(handler, payload))
+
+            bot_logger.debug(
+                'Chat create "%s" from message id=%s %s by bot id=%d',
+                payload.chat,
+                payload.message_id,
+                "handled" if handled else "not handled",
+                self.id,
+            )
 
     async def start_polling(
         self,
