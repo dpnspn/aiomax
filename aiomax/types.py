@@ -54,7 +54,7 @@ class User:
     def __repr__(self):
         return (
             f"{type(self).__name__}(user_id={self.user_id!r},"
-            "name={self.name!r})"
+            f"name={self.name!r})"
         )
 
     def __eq__(self, other):
@@ -913,17 +913,9 @@ class CommandContext:
     def user_id(self):
         return self.sender.user_id
 
-
-class CommandHandler:
-    def __init__(
-        self,
-        call: Callable,
-        as_message: bool = False,
-        description: "str | None" = None,
-    ):
-        self.call = call
-        self.as_message: bool = as_message
-        self.description: "str | None" = description
+    @property
+    def content(self):
+        return self.args_raw
 
 
 class Handler:
@@ -955,11 +947,23 @@ class MessageHandler(Handler):
         router_filters: "list[Callable] | None" = None,
         detect_commands: bool = False,
     ):
-        if router_filters is None:
-            router_filters = []
-
         super().__init__(call, deco_filter, router_filters)
         self.detect_commands: bool = detect_commands
+
+
+class CommandHandler(Handler):
+    def __init__(
+        self,
+        call: Callable,
+        deco_filter: "Callable | None" = None,
+        router_filters: "list[Callable] | None" = None,
+        as_message: bool = False,
+        description: "str | None" = None,
+    ):
+        super().__init__(call, deco_filter, router_filters)
+        self.call = call
+        self.as_message: bool = as_message
+        self.description: "str | None" = description
 
 
 class Image:
@@ -1496,6 +1500,10 @@ class ChatTitleEditPayload:
     def user_id(self):
         return self.user.user_id
 
+    @property
+    def content(self):
+        return self.title
+
     async def send(
         self,
         text: "str | None" = None,
@@ -1726,6 +1734,11 @@ class ExceptionContext:
             self.reply = self.obj.reply
         else:
             self.reply = self.send
+
+        if hasattr(obj, "user_id"):
+            self.user_id = obj.user_id
+        else:
+            self.user_id = None
 
     async def send(
         self,
