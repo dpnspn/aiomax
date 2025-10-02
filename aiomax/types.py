@@ -1,3 +1,4 @@
+import typing
 from typing import Callable, Literal, Optional
 
 from . import buttons, exceptions, utils
@@ -313,10 +314,13 @@ class ContactAttachment(Attachment):
 
     @staticmethod
     def from_json(data: dict) -> "ContactAttachment | None":
+        payload_raw_data: dict[str, typing.Any] = data["payload"]
+
         return ContactAttachment(
-            vcf_info=data.get("vcf_info"),
-            max_info=User.from_json(data.get("max_info")),
+            vcf_info=payload_raw_data["vcf_info"],
+            max_info=User.from_json(payload_raw_data["max_info"]),
         )
+
 
     def as_dict(self) -> dict:
         return {
