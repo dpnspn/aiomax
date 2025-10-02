@@ -1236,7 +1236,7 @@ class Callback:
             )
 
         out = await self.bot.post(
-            "https://botapi.max.ru/answers",
+            '/answers',
             params={"callback_id": self.callback_id},
             json=body,
         )
