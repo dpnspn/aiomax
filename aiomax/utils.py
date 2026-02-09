@@ -1,5 +1,5 @@
 from inspect import signature
-from typing import Callable, Literal
+from typing import Any, Callable, Literal
 
 import aiohttp
 
@@ -21,7 +21,7 @@ def get_message_body(
     """
     Returns the body of the message as json.
     """
-    body = {"text": text, "format": format, "notify": notify}
+    body: dict[str, Any] = {"text": text, "format": format, "notify": notify}
 
     # replying
     if reply_to:
@@ -57,7 +57,7 @@ def get_message_body(
         for at in attachments or []:
             if not hasattr(at, "as_dict"):
                 raise exceptions.AiomaxException(
-                    "This attachmentcannot be sent"
+                    "This attachment cannot be sent"
                 )
             body["attachments"].append(at.as_dict())
 
