@@ -7,6 +7,13 @@ lint = [
     "ruff"
 ]
 
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "faker",
+]
+
 [tool.ruff]
 include = [
     "aiomax/**.py",
@@ -77,3 +84,21 @@ Docs = "https://github.com/dpnspn/aiomax/wiki"
 [tool.setuptools-git-versioning]
 enabled = true
 version_file = ".version"
+
+[tool.pytest.ini_options]
+pythonpath = [ "aiomax" ]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+  "tests",
+]
+filterwarnings = [
+  "error",
+]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s %(levelname)-5.5s [%(name)s] %(message)s"
+addopts = [
+  "--import-mode=importlib",
+  "--strict-markers",
+]

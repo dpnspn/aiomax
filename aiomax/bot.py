@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 from collections.abc import AsyncIterator
+from http import HTTPMethod
 from typing import IO, BinaryIO, Literal
 
 import aiofiles
@@ -82,105 +83,86 @@ class Bot(Router):
 
         self.storage = fsm.FSMStorage()
 
-    async def get(self, *args, **kwargs):
+    async def _request(
+        self,
+        method: HTTPMethod,
+        *args,
+        params: dict | None = None,
+        headers: dict | None = None,
+        **kwargs,
+    ):
         """
-        Sends a GET request to the API.
+        Internal helper to send HTTP requests via the aiohttp session.
+        - method: 'get', 'post', 'patch', 'put', 'delete'
+        - params/headers: optional explicit params/headers that take precedence
+          over kwargs["params"]/kwargs["headers"].
+
+        This ensures Authorization header is added (raw token) if not provided.
         """
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
+        # merge params: explicit param wins
+        if params is not None:
+            merged_params = params
+        else:
+            # prefer popping from kwargs so it's not forwarded to session
+            merged_params = kwargs.pop("params", {})
 
-        response = await self.session.get(*args, params=params, **kwargs)
+        # merge headers: explicit headers win
+        if headers is not None:
+            merged_headers = headers
+        else:
+            # prefer popping from kwargs so it's not forwarded to session
+            merged_headers = kwargs.pop("headers", {})
+
+        # only add Authorization if caller didn't provide it
+        if "Authorization" not in merged_headers:
+            merged_headers["Authorization"] = self.access_token
+
+        response = await self.session.request(
+            method,
+            *args,
+            params=merged_params,
+            headers=merged_headers,
+            **kwargs,
+        )
 
         exception = await utils.get_exception(response)
-
         if not exception:
             return response
+
         raise exception
+
+    async def get(self, *args, **kwargs):
+        """
+        Sends a GET request to the API.
+        """
+        return await self._request(HTTPMethod.GET, *args, **kwargs)
 
     async def post(self, *args, **kwargs):
         """
         Sends a POST request to the API.
         """
-        if self.session is None:
-            raise Exception("Session is not initialized")
-
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.post(*args, params=params, **kwargs)
-
-        exception = await utils.get_exception(response)
-
-        if not exception:
-            return response
-        raise exception
+        return await self._request(HTTPMethod.POST, *args, **kwargs)
 
     async def patch(self, *args, **kwargs):
         """
         Sends a PATCH request to the API.
         """
-        if self.session is None:
-            raise Exception("Session is not initialized")
-
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.patch(*args, params=params, **kwargs)
-
-        exception = await utils.get_exception(response)
-
-        if not exception:
-            return response
-        raise exception
+        return await self._request(HTTPMethod.PATCH, *args, **kwargs)
 
     async def put(self, *args, **kwargs):
         """
         Sends a PUT request to the API.
         """
-        if self.session is None:
-            raise Exception("Session is not initialized")
-
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.put(*args, params=params, **kwargs)
-
-        exception = await utils.get_exception(response)
-
-        if not exception:
-            return response
-        raise exception
+        return await self._request(HTTPMethod.PUT, *args, **kwargs)
 
     async def delete(self, *args, **kwargs):
         """
         Sends a DELETE request to the API.
         """
-        if self.session is None:
-            raise Exception("Session is not initialized")
-
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.delete(*args, params=params, **kwargs)
-
-        exception = await utils.get_exception(response)
-
-        if not exception:
-            return response
-        raise exception
+        return await self._request(HTTPMethod.DELETE, *args, **kwargs)
 
     # send requests
 
