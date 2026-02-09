@@ -1,5 +1,6 @@
 import pytest
-from http import HTTPMethod
+
+from aiomax.enums import HTTPMethod
 
 
 async def test_authorization_header_added(bot):

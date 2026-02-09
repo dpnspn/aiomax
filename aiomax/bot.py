@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 from collections.abc import AsyncIterator
-from http import HTTPMethod
 from typing import IO, BinaryIO, Literal
 
 import aiofiles
@@ -10,6 +9,7 @@ import aiohttp
 
 from . import buttons, exceptions, fsm, utils
 from .cache import MessageCache
+from .enums import HTTPMethod
 from .router import Router
 from .types import (
     Attachment,
