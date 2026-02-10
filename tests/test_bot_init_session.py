@@ -41,11 +41,12 @@ def test_init_session_does_not_overwrite_existing_session(monkeypatch):
 
     b = Bot("token")
     # set an existing session
-    b.session = object()
+    existing_session = object()
+    b.session = existing_session
 
     # should not raise
     b._init_session()
 
     assert not isinstance(b.session, ExplodingClientSession)
-    assert isinstance(b.session, object)
+    assert b.session is existing_session
 
