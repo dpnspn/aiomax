@@ -982,9 +982,7 @@ class Bot(Router):
         if not session:
             self._init_session()
 
-        async with session:
-            self.session = session
-
+        async with self.session:
             # self info (this will cache the info automatically)
             await self.get_me()
 
