@@ -9,6 +9,7 @@ import aiohttp
 
 from . import buttons, exceptions, fsm, utils
 from .cache import MessageCache
+from .enums import HTTPMethod
 from .router import Router
 from .types import (
     Attachment,
@@ -82,107 +83,72 @@ class Bot(Router):
 
         self.storage = fsm.FSMStorage()
 
-    async def get(self, *args, **kwargs):
+    def _init_session(self) -> None:
         """
-        Sends a GET request to the API.
+        Initializes the aiohttp session with the authorization header.
+        """
+        if self.session is None:
+            self.session = aiohttp.ClientSession(
+                headers={"Authorization": self.access_token},
+            )
+
+    async def _request(
+        self,
+        method: HTTPMethod,
+        *args,
+        params: "dict | None" = None,
+        headers: "dict | None" = None,
+        **kwargs,
+    ):
+        """
+        Internal helper to send HTTP requests via the aiohttp session.
         """
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.get(*args, params=params, **kwargs)
+        response = await self.session.request(
+            method,
+            *args,
+            params=params,
+            headers=headers,
+            **kwargs,
+        )
 
         exception = await utils.get_exception(response)
-
         if not exception:
             return response
+
         raise exception
+
+    async def get(self, *args, **kwargs):
+        """
+        Sends a GET request to the API.
+        """
+        return await self._request(HTTPMethod.GET, *args, **kwargs)
 
     async def post(self, *args, **kwargs):
         """
         Sends a POST request to the API.
         """
-        if self.session is None:
-            raise Exception("Session is not initialized")
-
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.post(*args, params=params, **kwargs)
-
-        exception = await utils.get_exception(response)
-
-        if not exception:
-            return response
-        raise exception
+        return await self._request(HTTPMethod.POST, *args, **kwargs)
 
     async def patch(self, *args, **kwargs):
         """
         Sends a PATCH request to the API.
         """
-        if self.session is None:
-            raise Exception("Session is not initialized")
-
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.patch(*args, params=params, **kwargs)
-
-        exception = await utils.get_exception(response)
-
-        if not exception:
-            return response
-        raise exception
+        return await self._request(HTTPMethod.PATCH, *args, **kwargs)
 
     async def put(self, *args, **kwargs):
         """
         Sends a PUT request to the API.
         """
-        if self.session is None:
-            raise Exception("Session is not initialized")
-
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.put(*args, params=params, **kwargs)
-
-        exception = await utils.get_exception(response)
-
-        if not exception:
-            return response
-        raise exception
+        return await self._request(HTTPMethod.PUT, *args, **kwargs)
 
     async def delete(self, *args, **kwargs):
         """
         Sends a DELETE request to the API.
         """
-        if self.session is None:
-            raise Exception("Session is not initialized")
-
-        params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
-        if "params" in kwargs:
-            del kwargs["params"]
-
-        response = await self.session.delete(*args, params=params, **kwargs)
-
-        exception = await utils.get_exception(response)
-
-        if not exception:
-            return response
-        raise exception
-
-    # send requests
+        return await self._request(HTTPMethod.DELETE, *args, **kwargs)
 
     async def get_me(self) -> User:
         """
@@ -1014,11 +980,9 @@ class Bot(Router):
         self.polling = True
 
         if not session:
-            session = aiohttp.ClientSession()
+            self._init_session()
 
-        async with session:
-            self.session = session
-
+        async with self.session:
             # self info (this will cache the info automatically)
             await self.get_me()
 
