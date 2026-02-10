@@ -83,6 +83,15 @@ class Bot(Router):
 
         self.storage = fsm.FSMStorage()
 
+    def _init_session(self) -> None:
+        """
+        Initializes the aiohttp session with the authorization header.
+        """
+        if self.session is None:
+            self.session = aiohttp.ClientSession(
+                headers={"Authorization": self.access_token},
+            )
+
     async def _request(
         self,
         method: HTTPMethod,
@@ -93,38 +102,15 @@ class Bot(Router):
     ):
         """
         Internal helper to send HTTP requests via the aiohttp session.
-        - method: 'get', 'post', 'patch', 'put', 'delete'
-        - params/headers: optional explicit params/headers that take precedence
-          over kwargs["params"]/kwargs["headers"].
-
-        This ensures Authorization header is added (raw token) if not provided.
         """
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        # merge params: explicit param wins
-        if params is not None:
-            merged_params = params
-        else:
-            # prefer popping from kwargs so it's not forwarded to session
-            merged_params = kwargs.pop("params", {})
-
-        # merge headers: explicit headers win
-        if headers is not None:
-            merged_headers = headers
-        else:
-            # prefer popping from kwargs so it's not forwarded to session
-            merged_headers = kwargs.pop("headers", {})
-
-        # only add Authorization if caller didn't provide it
-        if "Authorization" not in merged_headers:
-            merged_headers["Authorization"] = self.access_token
-
         response = await self.session.request(
             method,
             *args,
-            params=merged_params,
-            headers=merged_headers,
+            params=params,
+            headers=headers,
             **kwargs,
         )
 
@@ -163,8 +149,6 @@ class Bot(Router):
         Sends a DELETE request to the API.
         """
         return await self._request(HTTPMethod.DELETE, *args, **kwargs)
-
-    # send requests
 
     async def get_me(self) -> User:
         """
@@ -996,7 +980,7 @@ class Bot(Router):
         self.polling = True
 
         if not session:
-            session = aiohttp.ClientSession()
+            self._init_session()
 
         async with session:
             self.session = session

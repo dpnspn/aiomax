@@ -27,15 +27,23 @@ class DummyResponse:
 
 
 class DummySession:
-    def __init__(self):
+    def __init__(self, headers):
         self.last_call = None
+        self.default_headers = headers
 
-    async def request(self, method, *args, params=None, headers=None, **kwargs):
+    async def request(
+        self,
+        method,
+        *args,
+        params=None,
+        headers=None,
+        **kwargs,
+    ):
         self.last_call = {
             "method": method,
             "args": args,
             "params": params,
-            "headers": headers if headers is not None else {},
+            "headers": headers or self.default_headers,
             "kwargs": kwargs,
         }
         await asyncio.sleep(0.1)
@@ -47,5 +55,5 @@ def bot(faker):
     """Create a Bot with a Faker-generated token and attach a DummySession."""
     token = faker.pystr(min_chars=10, max_chars=30)
     b = Bot(token)
-    b.session = DummySession()
+    b.session = DummySession(headers={"Authorization": token})
     return b

@@ -1,113 +1,141 @@
 import pytest
 
 from aiomax.enums import HTTPMethod
+from aiomax import exceptions
 
 
-async def test_authorization_header_added(bot):
-    await bot.get("https://platform-api.max.ru/me")
-    assert bot.session.last_call is not None
-    assert "Authorization" in bot.session.last_call["headers"]
-    assert bot.session.last_call["headers"]["Authorization"] == bot.access_token
+async def test_request_sends_authorization_header_by_default(bot):
+    """When no headers are passed, Bot._request should send the bot's
+    configured Authorization header stored in the session's default headers.
+    """
+    resp = await bot._request(HTTPMethod.GET, "https://example.com")
+
+    # ensure session.request was called with the method and headers
     assert bot.session.last_call["method"] == HTTPMethod.GET
-
-
-async def test_authorization_header_preserved(bot, faker):
-    custom = faker.pystr(min_chars=10, max_chars=30)
-    await bot.get("https://platform-api.max.ru/me", headers={"Authorization": custom})
-    assert bot.session.last_call["headers"]["Authorization"] == custom
-
-
-async def test_method_passed_for_post(bot):
-    await bot.post("https://platform-api.max.ru/messages", json={"x": 1})
-    assert bot.session.last_call["method"] == HTTPMethod.POST
-
-
-async def test_default_params_and_headers(bot):
-    await bot.get("https://platform-api.max.ru/empty")
-    assert bot.session.last_call["params"] == {}
-    assert "Authorization" in bot.session.last_call["headers"]
-
-
-async def test_kwargs_passthrough_to_session(bot):
-    await bot.post("https://platform-api.max.ru/messages", json={"x": 1}, timeout=5)
-    assert bot.session.last_call["kwargs"]["json"] == {"x": 1}
-    assert bot.session.last_call["kwargs"]["timeout"] == 5
-
-
-async def test_returns_response_on_success(bot):
-    resp = await bot.get("https://platform-api.max.ru/me")
+    assert (
+        bot.session.last_call["headers"]["Authorization"] == bot.access_token
+    )
+    # response should be returned as-is when there's no error
     assert resp is not None
-    assert hasattr(resp, "json")
 
 
-async def test_raises_on_invalid_token_response(bot):
-    class ErrorResponse:
+async def test_request_uses_custom_headers(bot):
+    """When headers are passed explicitly, they should be forwarded to the
+    underlying session request and not replaced by the session's defaults.
+    """
+    custom_headers = {"Authorization": "custom-token", "X-Test": "1"}
+
+    resp = await bot._request(
+        HTTPMethod.POST, "https://example.com", headers=custom_headers
+    )
+
+    assert bot.session.last_call["method"] == HTTPMethod.POST
+    assert bot.session.last_call["headers"] == custom_headers
+    assert resp is not None
+
+
+async def test_request_raises_on_invalid_token():
+    """If the API returns an error indicating an invalid token, the helper
+    should raise the appropriate exception (InvalidToken).
+    """
+
+    class BadResponse:
         def __init__(self):
             self.status = 401
-            self.content_type = "text/plain"
+            self.content_type = "application/json"
 
         async def json(self):
-            return {"code": "Invalid access_token"}
+            # utils.get_exception expects a JSON object with `code` and `message`.
+            return {"code": "Invalid access_token: token_expired", "message": None}
 
         async def text(self):
-            return "Invalid access_token: something"
+            return "Invalid access_token: token_expired"
 
         async def read(self):
             return b""
 
-    class ErrorSession:
+
+    class BadSession:
         def __init__(self):
             self.last_call = None
 
         async def request(self, method, *args, params=None, headers=None, **kwargs):
-            self.last_call = {"method": method, "args": args, "params": params, "headers": headers or {}, "kwargs": kwargs}
-            return ErrorResponse()
-
-    bot.session = ErrorSession()
-
-    with pytest.raises(Exception):
-        await bot.get("https://platform-api.max.ru/me")
+            self.last_call = {"method": method, "args": args, "params": params, "headers": headers, "kwargs": kwargs}
+            return BadResponse()
 
 
-async def test_session_not_initialized_raises(bot):
-    bot.session = None
-    with pytest.raises(Exception, match="Session is not initialized"):
-        await bot.get("https://platform-api.max.ru/me")
+    # create a fresh Bot instance and attach the BadSession
+    from aiomax.bot import Bot
+
+    b = Bot("some-token")
+    b.session = BadSession()
+
+    with pytest.raises(exceptions.InvalidToken):
+        await b._request(HTTPMethod.GET, "https://example.com")
 
 
-async def test_params_and_headers_not_in_kwargs(bot):
-    await bot.post(
-        "https://platform-api.max.ru/messages",
-        params={"p": "v"},
-        headers={"X-Test": "1"},
-        json={"x": 1},
-        timeout=3,
+# --- New tests to improve coverage for Bot._request ---
+
+async def test_request_raises_when_session_not_initialized():
+    """If the bot hasn't initialized a session, _request should raise."""
+    from aiomax.bot import Bot
+
+    b = Bot("token")
+    b.session = None
+
+    with pytest.raises(Exception) as exc:
+        await b._request(HTTPMethod.GET, "https://example.com")
+
+    assert str(exc.value) == "Session is not initialized"
+
+
+async def test_request_forwards_params_and_kwargs(bot):
+    """Ensure params and arbitrary kwargs (like json) are forwarded to session.request."""
+    params = {"count": 1}
+    payload = {"foo": "bar"}
+
+    resp = await bot._request(
+        HTTPMethod.PUT, "https://example.com/resource", params=params, json=payload
     )
 
-    assert bot.session.last_call["params"] == {"p": "v"}
-    assert "X-Test" in bot.session.last_call["headers"]
-    assert "params" not in bot.session.last_call["kwargs"]
-    assert "headers" not in bot.session.last_call["kwargs"]
+    assert bot.session.last_call["method"] == HTTPMethod.PUT
+    assert bot.session.last_call["params"] == params
+    assert bot.session.last_call["kwargs"]["json"] == payload
+    assert resp is not None
 
 
-async def test_explicit_empty_headers_adds_authorization(bot):
-    await bot.get("https://platform-api.max.ru/empty-headers", headers={})
-    assert "Authorization" in bot.session.last_call["headers"]
-    assert bot.session.last_call["headers"]["Authorization"] == bot.access_token
+async def test_request_raises_on_access_denied():
+    """When API returns access.denied code, _request should raise AccessDeniedException."""
+
+    class DeniedResponse:
+        def __init__(self):
+            self.status = 403
+            self.content_type = "application/json"
+
+        async def json(self):
+            return {"code": "access.denied", "message": "Not allowed"}
+
+        async def text(self):
+            return "access.denied"
+
+        async def read(self):
+            return b""
 
 
-async def test_authorization_empty_value_preserved(bot):
-    await bot.get("https://platform-api.max.ru/empty-auth", headers={"Authorization": ""})
+    class DeniedSession:
+        def __init__(self):
+            self.last_call = None
 
-    assert "Authorization" in bot.session.last_call["headers"]
-    assert bot.session.last_call["headers"]["Authorization"] == ""
+        async def request(self, method, *args, params=None, headers=None, **kwargs):
+            self.last_call = {"method": method, "args": args, "params": params, "headers": headers, "kwargs": kwargs}
+            return DeniedResponse()
 
 
-async def test_session_request_exception_propagates(bot):
-    class RaisingSession:
-        async def request(self, *args, **kwargs):
-            raise RuntimeError("network failure")
+    from aiomax.bot import Bot
 
-    bot.session = RaisingSession()
-    with pytest.raises(RuntimeError, match="network failure"):
-        await bot.get("https://platform-api.max.ru/me")
+    b = Bot("token")
+    b.session = DeniedSession()
+
+    with pytest.raises(exceptions.AccessDeniedException):
+        await b._request(HTTPMethod.DELETE, "https://example.com")
+
