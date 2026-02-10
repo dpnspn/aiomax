@@ -43,7 +43,7 @@ class DummySession:
             "method": method,
             "args": args,
             "params": params,
-            "headers": headers or self.default_headers,
+            "headers": {**(self.default_headers or {}), **(headers or {})},
             "kwargs": kwargs,
         }
         await asyncio.sleep(0)
