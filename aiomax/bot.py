@@ -96,8 +96,8 @@ class Bot(Router):
         self,
         method: HTTPMethod,
         *args,
-        params: dict | None = None,
-        headers: dict | None = None,
+        params: "dict | None" = None,
+        headers: "dict | None" = None,
         **kwargs,
     ):
         """
