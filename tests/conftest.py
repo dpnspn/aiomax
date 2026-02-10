@@ -46,7 +46,7 @@ class DummySession:
             "headers": headers or self.default_headers,
             "kwargs": kwargs,
         }
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
         return DummyResponse()
 
 
