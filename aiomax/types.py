@@ -302,7 +302,7 @@ class ContactAttachment(Attachment):
         :param vcf_phone: Contact's phone number.
             Only used when sending contacts
         :param max_info: User object if contact is a user.
-            Only used when recieving contacts, use `contact_id` instead
+            Only used when receiving contacts
         """
         super().__init__("contact")
         self.name: "str | None" = name
@@ -313,9 +313,17 @@ class ContactAttachment(Attachment):
 
     @staticmethod
     def from_json(data: dict) -> "ContactAttachment | None":
+        if not data:
+            return None
+
+        payload = data.get("payload") or {}
+
         return ContactAttachment(
-            vcf_info=data.get("vcf_info"),
-            max_info=User.from_json(data.get("max_info")),
+            name=payload.get("name"),
+            contact_id=payload.get("contact_id"),
+            vcf_info=payload.get("vcf_info"),
+            vcf_phone=payload.get("vcf_phone"),
+            max_info=User.from_json(payload.get("max_info")),
         )
 
     def as_dict(self) -> dict:
@@ -328,7 +336,6 @@ class ContactAttachment(Attachment):
                 "vcf_phone": self.vcf_phone,
             },
         }
-
 
 class ShareAttachment(Attachment):
     def __init__(
