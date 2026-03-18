@@ -337,6 +337,7 @@ class ContactAttachment(Attachment):
             },
         }
 
+
 class ShareAttachment(Attachment):
     def __init__(
         self,
