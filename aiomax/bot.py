@@ -90,7 +90,6 @@ class Bot(Router):
             raise Exception("Session is not initialized")
 
         params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
         if "params" in kwargs:
             del kwargs["params"]
 
@@ -110,7 +109,6 @@ class Bot(Router):
             raise Exception("Session is not initialized")
 
         params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
         if "params" in kwargs:
             del kwargs["params"]
 
@@ -130,7 +128,6 @@ class Bot(Router):
             raise Exception("Session is not initialized")
 
         params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
         if "params" in kwargs:
             del kwargs["params"]
 
@@ -150,7 +147,6 @@ class Bot(Router):
             raise Exception("Session is not initialized")
 
         params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
         if "params" in kwargs:
             del kwargs["params"]
 
@@ -170,7 +166,6 @@ class Bot(Router):
             raise Exception("Session is not initialized")
 
         params = kwargs.get("params", {})
-        params["access_token"] = self.access_token
         if "params" in kwargs:
             del kwargs["params"]
 
@@ -1014,7 +1009,7 @@ class Bot(Router):
         self.polling = True
 
         if not session:
-            session = aiohttp.ClientSession()
+            session = aiohttp.ClientSession(headers={'Authorization': self.access_token})
 
         async with session:
             self.session = session
