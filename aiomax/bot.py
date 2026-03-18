@@ -1009,7 +1009,9 @@ class Bot(Router):
         self.polling = True
 
         if not session:
-            session = aiohttp.ClientSession(headers={'Authorization': self.access_token})
+            session = aiohttp.ClientSession(
+                headers={"Authorization": self.access_token}
+            )
 
         async with session:
             self.session = session
