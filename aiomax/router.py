@@ -37,7 +37,7 @@ class Router:
             str, list[CommandHandler]
         ] = {}  # commands in this router
         self.case_sensitive: bool = case_sensitive
-        self.parent = None  # Parent bot of this router
+        self.parent: Router | None = None  # Parent bot of this router
         self.routers: list[Router] = []
         self.filters: dict[str, list[Callable]] = {
             "message_created": [],
