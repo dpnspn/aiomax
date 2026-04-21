@@ -61,7 +61,7 @@ def get_message_body(
                 )
             body["attachments"].append(at.as_dict())
 
-    if attachments == [] and "attachments" not in body:
+    if attachments == [] or "attachments" not in body:
         body["attachments"] = []
 
     return body
