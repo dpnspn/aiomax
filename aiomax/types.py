@@ -659,7 +659,7 @@ class Message:
             else:
                 return self.link.sender.user_id
 
-        if message_text:
+        if message_text and self.body.markup:
             for i in self.body.markup:
                 if i.type != "user_mention":
                     continue
