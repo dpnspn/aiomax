@@ -307,7 +307,7 @@ class Bot(Router):
         if json["message"] is None:
             return None
 
-        return Message.from_json(json)
+        return Message.from_json(json["message"])
 
     async def pin(
         self, chat_id: int, message_id: str, notify: "bool | None" = None
@@ -320,7 +320,7 @@ class Bot(Router):
         :param notify: Whether to notify users about the pin. True by default.
         """
         payload = {"message_id": message_id, "notify": notify}
-        payload = {k: v for k, v in payload.items() if v}
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         response = await self.put(
             f"https://platform-api.max.ru/chats/{chat_id}/pin", json=payload
@@ -494,7 +494,7 @@ class Bot(Router):
             "pin": pin,
             "notify": notify,
         }
-        payload = {k: v for k, v in payload.items() if v}
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         response = await self.patch(
             f"https://platform-api.max.ru/chats/{chat_id}", json=payload
