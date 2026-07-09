@@ -541,6 +541,7 @@ class Bot(Router):
         )
         url_json = await url_resp.json()
         token_resp = await self.session.post(url_json["url"], data=form)
+        token_resp.raise_for_status()
 
         if type in {"audio", "video"}:
             return url_json
