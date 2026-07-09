@@ -679,6 +679,7 @@ class Bot(Router):
                 reply_to=reply_to,
                 notify=notify,
                 disable_link_preview=disable_link_preview,
+                keyboard=keyboard,
                 attachments=attachments,
             )
 
