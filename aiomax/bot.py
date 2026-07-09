@@ -1046,10 +1046,15 @@ class Bot(Router):
             # also used to check the SSL certificate
             try:
                 await self.get_me()
-            except ClientConnectorCertificateError:
+
+            except ClientConnectorCertificateError as e:
                 raise exceptions.InvalidSSLException(
-                    'Invalid SSL certificate. A Mintsifra certificate is now required to connect to the Max servers. You can set `use_certificate=True` when creating your `Bot` instance to use the embedded certificate if you do not wish to install the certificate system-wide.'
-                )
+                    'Invalid SSL certificate. A Mintsifra certificate is now '\
+                    'required to connect to the Max servers. You can set '\
+                    '`use_certificate=True` when creating your `Bot` '\
+                    'instance to use the embedded certificate if you do not '\
+                    'wish to install the certificate system-wide.'
+                ) from e
 
             bot_logger.info(
                 f"Started polling with bot "
