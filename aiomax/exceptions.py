@@ -76,3 +76,10 @@ class FilenameNotProvided(AiomaxException):
     """
     Filename not provided exception
     """
+
+
+class InvalidSSLException(AiomaxException):
+    """
+    Invalid SSL certificate. Might mean that
+    Mintsifra certificate is not installed
+    """

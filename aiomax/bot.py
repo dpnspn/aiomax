@@ -3,9 +3,11 @@ import logging
 import os
 from collections.abc import AsyncIterator
 from typing import IO, BinaryIO, Literal
+import ssl
 
 import aiofiles
 import aiohttp
+from aiohttp.client_exceptions import ClientConnectorCertificateError
 
 from . import buttons, exceptions, fsm, utils
 from .cache import MessageCache
@@ -33,6 +35,8 @@ from .types import (
 
 bot_logger = logging.getLogger("aiomax.bot")
 
+API_URL = 'https://platform-api2.max.ru/'
+
 
 class Bot(Router):
     def __init__(
@@ -43,6 +47,7 @@ class Bot(Router):
         case_sensitive: bool = True,
         default_format: "Literal['markdown', 'html'] | None" = None,
         max_messages_cached: int = 10000,
+        use_certificate: bool = False
     ):
         """
         Bot init
@@ -56,9 +61,12 @@ class Bot(Router):
         :param default_format: Default message formatting mode
         :param max_messages_cached: Maximum number of messages to cache.
         Set to 0 to disable caching
+        :param use_certificate: Whether to automatically use
+        a Russian Mintsifra SSL certificate
         """
         super().__init__(case_sensitive)
 
+        self.use_certificate: bool = use_certificate
         self.access_token: str = access_token
         self.session = None
         self.polling = False
@@ -82,18 +90,19 @@ class Bot(Router):
 
         self.storage = fsm.FSMStorage()
 
-    async def get(self, *args, **kwargs):
+    async def get(self, url: str, *args, **kwargs):
         """
         Sends a GET request to the API.
         """
         if self.session is None:
             raise Exception("Session is not initialized")
 
+        url = API_URL+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
 
-        response = await self.session.get(*args, params=params, **kwargs)
+        response = await self.session.get(url, *args, params=params, **kwargs)
 
         exception = await utils.get_exception(response)
 
@@ -101,18 +110,19 @@ class Bot(Router):
             return response
         raise exception
 
-    async def post(self, *args, **kwargs):
+    async def post(self, url: str, *args, **kwargs):
         """
         Sends a POST request to the API.
         """
         if self.session is None:
             raise Exception("Session is not initialized")
 
+        url = API_URL+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
 
-        response = await self.session.post(*args, params=params, **kwargs)
+        response = await self.session.post(url, *args, params=params, **kwargs)
 
         exception = await utils.get_exception(response)
 
@@ -120,18 +130,19 @@ class Bot(Router):
             return response
         raise exception
 
-    async def patch(self, *args, **kwargs):
+    async def patch(self, url: str, *args, **kwargs):
         """
         Sends a PATCH request to the API.
         """
         if self.session is None:
             raise Exception("Session is not initialized")
 
+        url = API_URL+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
 
-        response = await self.session.patch(*args, params=params, **kwargs)
+        response = await self.session.patch(url, *args, params=params, **kwargs)
 
         exception = await utils.get_exception(response)
 
@@ -139,18 +150,19 @@ class Bot(Router):
             return response
         raise exception
 
-    async def put(self, *args, **kwargs):
+    async def put(self, url: str, *args, **kwargs):
         """
         Sends a PUT request to the API.
         """
         if self.session is None:
             raise Exception("Session is not initialized")
 
+        url = API_URL+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
 
-        response = await self.session.put(*args, params=params, **kwargs)
+        response = await self.session.put(url, *args, params=params, **kwargs)
 
         exception = await utils.get_exception(response)
 
@@ -158,18 +170,19 @@ class Bot(Router):
             return response
         raise exception
 
-    async def delete(self, *args, **kwargs):
+    async def delete(self, url: str, *args, **kwargs):
         """
         Sends a DELETE request to the API.
         """
         if self.session is None:
             raise Exception("Session is not initialized")
 
+        url = API_URL+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
 
-        response = await self.session.delete(*args, params=params, **kwargs)
+        response = await self.session.delete(url, *args, params=params, **kwargs)
 
         exception = await utils.get_exception(response)
 
@@ -183,7 +196,7 @@ class Bot(Router):
         """
         Returns info about the bot.
         """
-        response = await self.get("https://platform-api.max.ru/me")
+        response = await self.get("me")
         user = await response.json()
         user = User.from_json(user)
 
@@ -226,7 +239,7 @@ class Bot(Router):
         payload = {k: v for k, v in payload.items() if v}
 
         response = await self.patch(
-            "https://platform-api.max.ru/me", json=payload
+            "me", json=payload
         )
         data = await response.json()
 
@@ -257,7 +270,7 @@ class Bot(Router):
             }
             params = {k: v for k, v in params.items() if v}
             response = await self.get(
-                "https://platform-api.max.ru/chats", params=params
+                "chats", params=params
             )
             data = await response.json()
 
@@ -274,7 +287,7 @@ class Bot(Router):
 
         :param link: Public chat link or username.
         """
-        response = await self.get(f"https://platform-api.max.ru/chats/{link}")
+        response = await self.get(f"chats/{link}")
         json = await response.json()
 
         return Chat.from_json(json)
@@ -286,7 +299,7 @@ class Bot(Router):
         :param chat_id: The ID of the chat.
         """
         response = await self.get(
-            f"https://platform-api.max.ru/chats/{chat_id}"
+            f"chats/{chat_id}"
         )
         json = await response.json()
 
@@ -300,7 +313,7 @@ class Bot(Router):
         :param chat_id: The ID of the chat.
         """
         response = await self.get(
-            f"https://platform-api.max.ru/chats/{chat_id}/pin"
+            f"chats/{chat_id}/pin"
         )
         json = await response.json()
 
@@ -323,7 +336,7 @@ class Bot(Router):
         payload = {k: v for k, v in payload.items() if v is not None}
 
         response = await self.put(
-            f"https://platform-api.max.ru/chats/{chat_id}/pin", json=payload
+            f"chats/{chat_id}/pin", json=payload
         )
         return await response.json()
 
@@ -334,7 +347,7 @@ class Bot(Router):
         :param chat_id: The ID of the chat.
         """
         response = await self.delete(
-            f"https://platform-api.max.ru/chats/{chat_id}/pin"
+            f"chats/{chat_id}/pin"
         )
 
         return await response.json()
@@ -346,7 +359,7 @@ class Bot(Router):
         :param chat_id: The ID of the chat.
         """
         response = await self.get(
-            f"https://platform-api.max.ru/chats/{chat_id}/members/me"
+            f"chats/{chat_id}/members/me"
         )
         json = await response.json()
 
@@ -359,7 +372,7 @@ class Bot(Router):
         :param chat_id: The ID of the chat.
         """
         response = await self.delete(
-            f"https://platform-api.max.ru/chats/{chat_id}/members/me"
+            f"chats/{chat_id}/members/me"
         )
 
         return await response.json()
@@ -371,7 +384,7 @@ class Bot(Router):
         :param chat_id: The ID of the chat.
         """
         response = await self.get(
-            f"https://platform-api.max.ru/chats/{chat_id}/members/admins"
+            f"chats/{chat_id}/members/admins"
         )
 
         users = [User.from_json(i) for i in (await response.json())["members"]]
@@ -389,7 +402,7 @@ class Bot(Router):
             "user_ids": user_ids if isinstance(user_ids, list) else [user_ids]
         }
         response = await self.get(
-            f"https://platform-api.max.ru/chats/{chat_id}/members",
+            f"chats/{chat_id}/members",
             params=params,
         )
 
@@ -418,7 +431,7 @@ class Bot(Router):
             }
             params = {k: v for k, v in params.items() if v}
             response = await self.get(
-                f"https://platform-api.max.ru/chats/{chat_id}/members",
+                f"chats/{chat_id}/members",
                 params=params,
             )
             data = await response.json()
@@ -439,7 +452,7 @@ class Bot(Router):
         """
 
         response = await self.post(
-            f"https://platform-api.max.ru/chats/{chat_id}/members",
+            f"chats/{chat_id}/members",
             json={"user_ids": users},
         )
 
@@ -463,7 +476,7 @@ class Bot(Router):
             params["block"] = str(block)
 
         response = await self.delete(
-            f"https://platform-api.max.ru/chats/{chat_id}/members/",
+            f"chats/{chat_id}/members/",
             params=params,
         )
 
@@ -497,7 +510,7 @@ class Bot(Router):
         payload = {k: v for k, v in payload.items() if v is not None}
 
         response = await self.patch(
-            f"https://platform-api.max.ru/chats/{chat_id}", json=payload
+            f"chats/{chat_id}", json=payload
         )
         json = await response.json()
 
@@ -513,7 +526,7 @@ class Bot(Router):
         """
 
         response = await self.post(
-            f"https://platform-api.max.ru/chats/{chat_id}/actions",
+            f"chats/{chat_id}/actions",
             json={"action": action},
         )
 
@@ -537,7 +550,7 @@ class Bot(Router):
         form.add_field(field_name, data)
 
         url_resp = await self.post(
-            "https://platform-api.max.ru/uploads", params={"type": type}
+            "uploads", params={"type": type}
         )
         url_json = await url_resp.json()
         token_resp = await self.session.post(url_json["url"], data=form)
@@ -659,7 +672,7 @@ class Bot(Router):
 
         try:
             response = await self.post(
-                "https://platform-api.max.ru/messages",
+                "messages",
                 params=params,
                 json=body,
             )
@@ -719,7 +732,7 @@ class Bot(Router):
 
         try:
             response = await self.put(
-                "https://platform-api.max.ru/messages",
+                "messages",
                 params=params,
                 json=body,
             )
@@ -754,7 +767,7 @@ class Bot(Router):
         params = {"message_id": message_id}
 
         response = await self.delete(
-            "https://platform-api.max.ru/messages", params=params
+            "messages", params=params
         )
 
         json = await response.json()
@@ -769,7 +782,7 @@ class Bot(Router):
         """
         try:
             response = await self.get(
-                f"https://platform-api.max.ru/messages/{message_id}"
+                f"messages/{message_id}"
             )
 
             data = await response.json()
@@ -788,7 +801,7 @@ class Bot(Router):
         payload = {k: v for k, v in payload.items() if v}
 
         response = await self.get(
-            "https://platform-api.max.ru/updates", params=payload
+            "updates", params=payload
         )
         json = await response.json()
         if "marker" in json:
@@ -1012,16 +1025,31 @@ class Bot(Router):
         """
         self.polling = True
 
+        conn = None
+
+        if self.use_certificate:
+            path = os.path.dirname(__file__) + '/russian_trusted_root_ca.cer'
+            ssl_context = ssl.create_default_context()
+            ssl_context.load_verify_locations(cafile=path)
+            conn = aiohttp.TCPConnector(ssl=ssl_context)
+
         if not session:
             session = aiohttp.ClientSession(
-                headers={"Authorization": self.access_token}
+                headers={"Authorization": self.access_token},
+                connector=conn
             )
 
         async with session:
             self.session = session
 
             # self info (this will cache the info automatically)
-            await self.get_me()
+            # also used to check the SSL certificate
+            try:
+                await self.get_me()
+            except ClientConnectorCertificateError:
+                raise exceptions.InvalidSSLException(
+                    'Invalid SSL certificate. A Mintsifra certificate is now required to connect to the Max servers. You can set `use_certificate=True` when creating your `Bot` instance to use the embedded certificate if you do not wish to install the certificate system-wide.'
+                )
 
             bot_logger.info(
                 f"Started polling with bot "
