@@ -98,7 +98,6 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -118,7 +117,6 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -138,7 +136,6 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -158,7 +155,6 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -178,7 +174,6 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -1037,7 +1032,8 @@ class Bot(Router):
         if not session:
             session = aiohttp.ClientSession(
                 headers={"Authorization": self.access_token},
-                connector=conn
+                connector=conn,
+                base_url=self.api_url
             )
 
         async with session:
