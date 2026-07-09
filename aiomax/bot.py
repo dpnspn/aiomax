@@ -725,7 +725,9 @@ class Bot(Router):
             )
             json = await response.json()
             if not json.get("success", True):
-                raise await utils.get_exception(response)
+                exception = await utils.get_exception(response)
+                if exception:
+                    raise exception
             message = Message.from_json(json)
             message.bot = self
             return message
