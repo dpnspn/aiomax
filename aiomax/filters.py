@@ -128,7 +128,7 @@ class regex(_filter):
 
     def __call__(self, obj: any):
         if hasattr(obj, "content"):
-            return re.fullmatch(self.pattern, obj.body.text)
+            return re.fullmatch(self.pattern, obj.content)
         else:
             raise Exception(f"Class {type(obj).__name__} has no content")
 
