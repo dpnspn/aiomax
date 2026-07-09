@@ -35,8 +35,6 @@ from .types import (
 
 bot_logger = logging.getLogger("aiomax.bot")
 
-API_URL = 'https://platform-api2.max.ru/'
-
 
 class Bot(Router):
     def __init__(
@@ -47,7 +45,8 @@ class Bot(Router):
         case_sensitive: bool = True,
         default_format: "Literal['markdown', 'html'] | None" = None,
         max_messages_cached: int = 10000,
-        use_certificate: bool = False
+        use_certificate: bool = False,
+        api_url: str = 'https://platform-api2.max.ru/'
     ):
         """
         Bot init
@@ -67,6 +66,8 @@ class Bot(Router):
         super().__init__(case_sensitive)
 
         self.use_certificate: bool = use_certificate
+        self.api_url: str = api_url
+
         self.access_token: str = access_token
         self.session = None
         self.polling = False
@@ -97,7 +98,7 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = API_URL+url.lstrip('/')
+        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -117,7 +118,7 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = API_URL+url.lstrip('/')
+        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -137,7 +138,7 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = API_URL+url.lstrip('/')
+        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -157,7 +158,7 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = API_URL+url.lstrip('/')
+        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -177,7 +178,7 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = API_URL+url.lstrip('/')
+        url = self.api_url+url.lstrip('/')
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]

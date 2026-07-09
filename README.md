@@ -18,7 +18,7 @@ pip install aiomax
 pip install git+https://github.com/dpnspn/aiomax.git
 ```
 
-> [!INFO]
+> [!IMPORTANT]
 > С недавнего времени для подключения к серверам Max нужен [сертификат Минцифры](https://www.gosuslugi.ru/crt).
 > Если у вас не установлен сертификат, при создании класса бота можно указать параметр `use_certificate=True` - тогда aiomax будет использовать встроенный сертификат Минцифры.
 
