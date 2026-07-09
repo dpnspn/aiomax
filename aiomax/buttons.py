@@ -69,7 +69,7 @@ class CallbackButton(Button):
 
     @staticmethod
     def from_json(data: dict) -> "CallbackButton":
-        return CallbackButton(data["text"], data["payload"], data["intent"])
+        return CallbackButton(data["text"], data["payload"], data.get("intent", "default"))
 
     def to_json(self) -> dict:
         return {
