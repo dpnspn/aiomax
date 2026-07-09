@@ -1009,7 +1009,7 @@ class Bot(Router):
             session = aiohttp.ClientSession(
                 headers={"Authorization": self.access_token},
                 connector=conn,
-                base_url=self.api_url
+                base_url=self.api_url,
             )
 
         async with session:
