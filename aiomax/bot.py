@@ -1,9 +1,9 @@
 import asyncio
 import logging
 import os
+import ssl
 from collections.abc import AsyncIterator
 from typing import IO, BinaryIO, Literal
-import ssl
 
 import aiofiles
 import aiohttp
@@ -46,7 +46,7 @@ class Bot(Router):
         default_format: "Literal['markdown', 'html'] | None" = None,
         max_messages_cached: int = 10000,
         use_certificate: bool = False,
-        api_url: str = 'https://platform-api2.max.ru/'
+        api_url: str = "https://platform-api2.max.ru/",
     ):
         """
         Bot init
@@ -98,7 +98,7 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
+        url = self.api_url + url.lstrip("/")
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -118,7 +118,7 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
+        url = self.api_url + url.lstrip("/")
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -138,12 +138,14 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
+        url = self.api_url + url.lstrip("/")
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
 
-        response = await self.session.patch(url, *args, params=params, **kwargs)
+        response = await self.session.patch(
+            url, *args, params=params, **kwargs
+        )
 
         exception = await utils.get_exception(response)
 
@@ -158,7 +160,7 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
+        url = self.api_url + url.lstrip("/")
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
@@ -178,12 +180,14 @@ class Bot(Router):
         if self.session is None:
             raise Exception("Session is not initialized")
 
-        url = self.api_url+url.lstrip('/')
+        url = self.api_url + url.lstrip("/")
         params = kwargs.get("params", {})
         if "params" in kwargs:
             del kwargs["params"]
 
-        response = await self.session.delete(url, *args, params=params, **kwargs)
+        response = await self.session.delete(
+            url, *args, params=params, **kwargs
+        )
 
         exception = await utils.get_exception(response)
 
@@ -239,9 +243,7 @@ class Bot(Router):
         }
         payload = {k: v for k, v in payload.items() if v}
 
-        response = await self.patch(
-            "me", json=payload
-        )
+        response = await self.patch("me", json=payload)
         data = await response.json()
 
         # caching info
@@ -270,9 +272,7 @@ class Bot(Router):
                 "marker": marker,
             }
             params = {k: v for k, v in params.items() if v}
-            response = await self.get(
-                "chats", params=params
-            )
+            response = await self.get("chats", params=params)
             data = await response.json()
 
             for chat in data["chats"]:
@@ -299,9 +299,7 @@ class Bot(Router):
 
         :param chat_id: The ID of the chat.
         """
-        response = await self.get(
-            f"chats/{chat_id}"
-        )
+        response = await self.get(f"chats/{chat_id}")
         json = await response.json()
 
         return Chat.from_json(json)
@@ -313,9 +311,7 @@ class Bot(Router):
 
         :param chat_id: The ID of the chat.
         """
-        response = await self.get(
-            f"chats/{chat_id}/pin"
-        )
+        response = await self.get(f"chats/{chat_id}/pin")
         json = await response.json()
 
         if json["message"] is None:
@@ -336,9 +332,7 @@ class Bot(Router):
         payload = {"message_id": message_id, "notify": notify}
         payload = {k: v for k, v in payload.items() if v is not None}
 
-        response = await self.put(
-            f"chats/{chat_id}/pin", json=payload
-        )
+        response = await self.put(f"chats/{chat_id}/pin", json=payload)
         return await response.json()
 
     async def delete_pin(self, chat_id: int):
@@ -347,9 +341,7 @@ class Bot(Router):
 
         :param chat_id: The ID of the chat.
         """
-        response = await self.delete(
-            f"chats/{chat_id}/pin"
-        )
+        response = await self.delete(f"chats/{chat_id}/pin")
 
         return await response.json()
 
@@ -359,9 +351,7 @@ class Bot(Router):
 
         :param chat_id: The ID of the chat.
         """
-        response = await self.get(
-            f"chats/{chat_id}/members/me"
-        )
+        response = await self.get(f"chats/{chat_id}/members/me")
         json = await response.json()
 
         return User.from_json(json)
@@ -372,9 +362,7 @@ class Bot(Router):
 
         :param chat_id: The ID of the chat.
         """
-        response = await self.delete(
-            f"chats/{chat_id}/members/me"
-        )
+        response = await self.delete(f"chats/{chat_id}/members/me")
 
         return await response.json()
 
@@ -384,9 +372,7 @@ class Bot(Router):
 
         :param chat_id: The ID of the chat.
         """
-        response = await self.get(
-            f"chats/{chat_id}/members/admins"
-        )
+        response = await self.get(f"chats/{chat_id}/members/admins")
 
         users = [User.from_json(i) for i in (await response.json())["members"]]
 
@@ -510,9 +496,7 @@ class Bot(Router):
         }
         payload = {k: v for k, v in payload.items() if v is not None}
 
-        response = await self.patch(
-            f"chats/{chat_id}", json=payload
-        )
+        response = await self.patch(f"chats/{chat_id}", json=payload)
         json = await response.json()
 
         return Chat.from_json(json)
@@ -550,9 +534,7 @@ class Bot(Router):
         form = aiohttp.FormData(quote_fields=False)
         form.add_field(field_name, data)
 
-        url_resp = await self.post(
-            "uploads", params={"type": type}
-        )
+        url_resp = await self.post("uploads", params={"type": type})
         url_json = await url_resp.json()
         token_resp = await self.session.post(url_json["url"], data=form)
         token_resp.raise_for_status()
@@ -767,9 +749,7 @@ class Bot(Router):
         # editing
         params = {"message_id": message_id}
 
-        response = await self.delete(
-            "messages", params=params
-        )
+        response = await self.delete("messages", params=params)
 
         json = await response.json()
         if not json["success"]:
@@ -782,9 +762,7 @@ class Bot(Router):
         :param message_id: ID of the message to get info of
         """
         try:
-            response = await self.get(
-                f"messages/{message_id}"
-            )
+            response = await self.get(f"messages/{message_id}")
 
             data = await response.json()
 
@@ -801,9 +779,7 @@ class Bot(Router):
         payload = {"limit": limit, "marker": self.marker}
         payload = {k: v for k, v in payload.items() if v}
 
-        response = await self.get(
-            "updates", params=payload
-        )
+        response = await self.get("updates", params=payload)
         json = await response.json()
         if "marker" in json:
             self.marker = json["marker"]
@@ -1029,15 +1005,14 @@ class Bot(Router):
         conn = None
 
         if self.use_certificate:
-            path = os.path.dirname(__file__) + '/russian_trusted_root_ca.cer'
+            path = os.path.dirname(__file__) + "/russian_trusted_root_ca.cer"
             ssl_context = ssl.create_default_context()
             ssl_context.load_verify_locations(cafile=path)
             conn = aiohttp.TCPConnector(ssl=ssl_context)
 
         if not session:
             session = aiohttp.ClientSession(
-                headers={"Authorization": self.access_token},
-                connector=conn
+                headers={"Authorization": self.access_token}, connector=conn
             )
 
         async with session:
@@ -1050,11 +1025,11 @@ class Bot(Router):
 
             except ClientConnectorCertificateError as e:
                 raise exceptions.InvalidSSLException(
-                    'Invalid SSL certificate. A Mintsifra certificate is now '\
-                    'required to connect to the Max servers. You can set '\
-                    '`use_certificate=True` when creating your `Bot` '\
-                    'instance to use the embedded certificate if you do not '\
-                    'wish to install the certificate system-wide.'
+                    "Invalid SSL certificate. A Mintsifra certificate is now "
+                    "required to connect to the Max servers. You can set "
+                    "`use_certificate=True` when creating your `Bot` "
+                    "instance to use the embedded certificate if you do not "
+                    "wish to install the certificate system-wide."
                 ) from e
 
             bot_logger.info(
