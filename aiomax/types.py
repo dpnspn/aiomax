@@ -555,7 +555,7 @@ class LinkedMessage:
         chat_id: "int | None" = None,
     ):
         self.type: str = type
-        self.message: MessageBody = message
+        self.message: "MessageBody | None" = message
         self.sender: User = sender
         self.chat_id: "int | None" = chat_id
 
@@ -566,7 +566,7 @@ class LinkedMessage:
 
         return LinkedMessage(
             type=data["type"],
-            message=MessageBody.from_json(data["message"]),
+            message=MessageBody.from_json(data.get("message")),
             sender=User.from_json(data.get("sender")),
             chat_id=data.get("chat_id"),
         )
@@ -659,7 +659,7 @@ class Message:
             else:
                 return self.link.sender.user_id
 
-        if message_text:
+        if message_text and self.body.markup:
             for i in self.body.markup:
                 if i.type != "user_mention":
                     continue

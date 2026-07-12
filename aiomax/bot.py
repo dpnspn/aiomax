@@ -307,7 +307,7 @@ class Bot(Router):
         if json["message"] is None:
             return None
 
-        return Message.from_json(json)
+        return Message.from_json(json["message"])
 
     async def pin(
         self, chat_id: int, message_id: str, notify: "bool | None" = None
@@ -320,7 +320,7 @@ class Bot(Router):
         :param notify: Whether to notify users about the pin. True by default.
         """
         payload = {"message_id": message_id, "notify": notify}
-        payload = {k: v for k, v in payload.items() if v}
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         response = await self.put(
             f"https://platform-api.max.ru/chats/{chat_id}/pin", json=payload
@@ -494,7 +494,7 @@ class Bot(Router):
             "pin": pin,
             "notify": notify,
         }
-        payload = {k: v for k, v in payload.items() if v}
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         response = await self.patch(
             f"https://platform-api.max.ru/chats/{chat_id}", json=payload
@@ -541,6 +541,7 @@ class Bot(Router):
         )
         url_json = await url_resp.json()
         token_resp = await self.session.post(url_json["url"], data=form)
+        token_resp.raise_for_status()
 
         if type in {"audio", "video"}:
             return url_json
@@ -679,6 +680,7 @@ class Bot(Router):
                 reply_to=reply_to,
                 notify=notify,
                 disable_link_preview=disable_link_preview,
+                keyboard=keyboard,
                 attachments=attachments,
             )
 
@@ -723,7 +725,9 @@ class Bot(Router):
             )
             json = await response.json()
             if not json.get("success", True):
-                raise await utils.get_exception(response)
+                exception = await utils.get_exception(response)
+                if exception:
+                    raise exception
             message = Message.from_json(json)
             message.bot = self
             return message

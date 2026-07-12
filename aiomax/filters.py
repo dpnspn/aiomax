@@ -66,7 +66,7 @@ class equals(_filter):
         if hasattr(obj, "content"):
             return obj.content == self.content
         else:
-            raise Exception(f"Class {type(object).__name__} has no content")
+            raise Exception(f"Class {type(obj).__name__} has no content")
 
 
 class has(_filter):
@@ -82,7 +82,7 @@ class has(_filter):
         if hasattr(obj, "content"):
             return self.content in obj.content
         else:
-            raise Exception(f"Class {type(object).__name__} has no content")
+            raise Exception(f"Class {type(obj).__name__} has no content")
 
 
 class startswith(_filter):
@@ -98,7 +98,7 @@ class startswith(_filter):
         if hasattr(obj, "content"):
             return obj.content.startswith(self.prefix)
         else:
-            raise Exception(f"Class {type(object).__name__} has no content")
+            raise Exception(f"Class {type(obj).__name__} has no content")
 
 
 class endswith(_filter):
@@ -114,7 +114,7 @@ class endswith(_filter):
         if hasattr(obj, "content"):
             return obj.content.endswith(self.suffix)
         else:
-            raise Exception(f"Class {type(object).__name__} has no content")
+            raise Exception(f"Class {type(obj).__name__} has no content")
 
 
 class regex(_filter):
@@ -128,7 +128,7 @@ class regex(_filter):
 
     def __call__(self, obj: any):
         if hasattr(obj, "content"):
-            return re.fullmatch(self.pattern, obj.body.text)
+            return re.fullmatch(self.pattern, obj.content)
         else:
             raise Exception(f"Class {type(obj).__name__} has no content")
 
@@ -145,7 +145,7 @@ def papaya(obj: any):
             return False
         return words[-2].lower() == "папайя"
     else:
-        raise Exception(f"Class {type(object).__name__} has no content")
+        raise Exception(f"Class {type(obj).__name__} has no content")
 
 
 class state(_filter):
@@ -159,7 +159,7 @@ class state(_filter):
 
     def __call__(self, obj: Any):
         if not hasattr(obj, "user_id"):
-            raise Exception(f"Class {type(object).__name__} has no user id")
+            raise Exception(f"Class {type(obj).__name__} has no user id")
 
         user_id = obj.user_id
 

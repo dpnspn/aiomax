@@ -57,7 +57,7 @@ def get_message_body(
         for at in attachments or []:
             if not hasattr(at, "as_dict"):
                 raise exceptions.AiomaxException(
-                    "This attachmentcannot be sent"
+                    "This attachment cannot be sent"
                 )
             body["attachments"].append(at.as_dict())
 
