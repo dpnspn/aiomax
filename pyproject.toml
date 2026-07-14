@@ -77,3 +77,6 @@ Docs = "https://github.com/dpnspn/aiomax/wiki"
 [tool.setuptools-git-versioning]
 enabled = true
 version_file = ".version"
+
+[tool.setuptools.package-data]
+"aiomax" = ["*.cer"]
