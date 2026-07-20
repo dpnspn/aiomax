@@ -69,7 +69,7 @@ class Bot(Router):
         self.api_url: str = api_url
 
         self.access_token: str = access_token
-        self.session = None
+        self.session: aiohttp.ClientSession | None = None
         self.polling = False
 
         self.command_prefixes: str | list[str] = command_prefixes
@@ -85,7 +85,7 @@ class Bot(Router):
         self.username: str | None = None
         self.name: str | None = None
         self.description: str | None = None
-        self.bot_commands: list[BotCommand] = None
+        self.bot_commands: list[BotCommand] | None = None
 
         self.marker: int | None = None
 
